@@ -1,0 +1,12 @@
+result <- read.csv("6372_Project2_HOF/data/result.csv")
+train <- read.csv("6372_Project2_HOF/data/train.csv")
+test <- read.csv("6372_Project2_HOF/data/test.csv")
+
+#Columes
+cols.Inducted <- 10
+cols.HallOfFame <- c(2:9)
+cols.Batting.avg <- c(99:103)
+cols.Batting <- c(31:48)
+cols.Fielding <- c(49:59)
+cols.Awards <- c(50:89)
+cols.Positions <- c(90:98)
