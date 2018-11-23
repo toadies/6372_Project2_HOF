@@ -2,7 +2,13 @@ library(glmnet)
 library(MASS)
 library(caret)
 library(pROC)
+library(ROCR)
+library(pheatmap)
+library(randomForest)
 
+
+#GB SetWD
+#setwd("/Users/gbourzik/Documents/GitHub/")
 source("6372_Project2_HOF/ImportData.R")
 
 x <- model.matrix(HallOfFame_inducted~.,train[,c(cols.Inducted, 3, cols.Batting.avg, cols.Fielding)])
@@ -33,17 +39,34 @@ lasso_prob <- predict(glm.lasso,newx = x.test, s=lambda_1se,type="response")
 contrasts(test$HallOfFame_inducted)
 lasso_predict <- rep("N",nrow(test))
 lasso_predict[lasso_prob>.5] <- "Y"
-#confusion matrix
 
-confusionMatrix(table(lasso_predict,test$HallOfFame_inducted))
+# GB - Update Prediction on Traing Data to ensure we used right data set
+# Me just playing this can be deleted
+#contrasts(train$HallOfFame_inducted)
+#lasso_predict <- rep("N",nrow(train))
+#lasso_predict[lasso_prob>.5] <- "Y"
 
-# Still need to fix
-roccurve <- roc(y.test ~ lasso_prob)
+
+#confusion matrix (Updated)
+# Confusion Variables are wrong...
+#confusionMatrix(table(lasso_predict,lasso_predict))
+cf <-confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
+cf
+
+
+
+
+
+# ROC Curves (Updated)
+roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
 plot(roccurve)
 auc(roccurve)
-# 
-# 
-# 
+
+
+
+
+
+#################### Left Over Turkey Code #################### 
 # glm.manual <- glm(HallOfFame_inducted~
 #                       Batting_total_teams+
 #                       Batting_R+

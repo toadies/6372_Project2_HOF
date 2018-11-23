@@ -10,6 +10,8 @@ cols.Batting <- c(31:48,99)
 cols.Fielding <- c(49:59)
 cols.Awards <- c(50:89)
 cols.Positions <- c(90:98)
+# Add Data For GGPairs
+cols.BattingAvg_w_Hall <- c(2:5,100:105)
 
 names(result)
 
