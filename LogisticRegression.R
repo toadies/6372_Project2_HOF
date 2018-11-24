@@ -30,6 +30,24 @@ lambda_1se <- glm.lasso$lambda.1se
 glm.lasso.coef <- coef(glm.lasso,s=lambda_1se)
 View(data.frame(name = glm.lasso.coef@Dimnames[[1]][glm.lasso.coef@i + 1], coefficient = glm.lasso.coef@x))
 
+# Rerun coef variables to remove penatlties caused by LASSO
+data.frame(name = glm.lasso.coef@Dimnames[[1]][glm.lasso.coef@i + 1], coefficient = glm.lasso.coef@x)
+
+# Get column indecis
+cols.lasso.coef <- glm.lasso.coef@i
+cols.lasso.coef <- cols.lasso.coef[-1] # Remove the intercept
+
+train.reduce = train[,c(cols.Inducted, 3, cols.Batting.avg, cols.Fielding)][,cols.lasso.coef]
+train.reduce$HallOfFame_inducted <- train$HallOfFame_inducted
+
+glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
+c <- summary(glm.manual)
+
+View(glm.manual$coefficients)
+View(exp(cbind(coef(glm.manual), confint(glm.manual))))
+result$lasso_prob <- predict.glm(glm.manual,newx = result)
+
+
 #predict class, type=”class”
 x.test <- model.matrix(HallOfFame_inducted~.,test[,c(cols.Inducted, 3, cols.Batting.avg, cols.Fielding)])
 y.test <- ifelse(test$HallOfFame_inducted=="Y",1,0)
@@ -67,21 +85,5 @@ auc(roccurve)
 
 
 #################### Left Over Turkey Code #################### 
-# glm.manual <- glm(HallOfFame_inducted~
-#                       Batting_total_teams+
-#                       Batting_R+
-#                       Batting_3B+
-#                       Batting_RBI+
-#                       # Fielding_E+ corresponds with # games
-#                       Awards_BaseballMagazineAllStar+
-#                       Awards_TSNAllStar+
-#                       Awards_BabeRuthAward+
-#                       # Awards_HankAaronAward+ #Exlude, coef to small to measure
-#                       AllstarGames
-#                   ,data = result, family = binomial)
-# c <- summary(glm.manual)
-# 
-# View(glm.manual$coefficients)
-# View(exp(cbind(coef(glm.manual), confint(glm.manual))))
-# result$lasso_prob <- predict.glm(glm.manual,newx = result)
+
 
