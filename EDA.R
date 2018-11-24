@@ -206,6 +206,18 @@ arrangeFieldingStats <- ggarrange(
 )
 ggsave("6372_Project2_HOF/Fielding Means Plots.png",plot = arrangeFieldingStats, type = png())
 
+arrangeCatcherStats <- ggarrange(
+    meansPlotPB,
+    meansPlotWP,
+    meansPlotSB,
+    meansPlotCS,
+    labels = c("Passed Balls", "Wild Pitches", "Stolen Bases", "Caught Stealing" ),
+    ncol = 2, 
+    nrow = 2
+)
+ggsave("6372_Project2_HOF/Catcher Fielding Means Plots.png",plot = arrangeCatcherStats, type = png())
+
+
 # Box plot for catchers on PS, WP, SB, CS
 # Box plot for Passed Balls
 boxPlotPB <- ggplot(
@@ -244,13 +256,13 @@ boxPlotCS <- ggplot(
 boxPlotCS
 
 arrangeCatcherStats <- ggarrange(
-    meansPlotPB,
-    meansPlotWP,
-    meansPlotSB,
-    meansPlotCS,
+    boxPlotPB,
+    boxPlotWP,
+    boxPlotSB,
+    boxPlotCS,
     labels = c("Passed Balls", "Wild Pitches", "Stolen Bases", "Caught Stealing" ),
     ncol = 2, 
     nrow = 2
 )
-ggsave("6372_Project2_HOF/Catcher Fielding Means Plots.png",plot = arrangeCatcherStats, type = png())
+ggsave("6372_Project2_HOF/Catcher Fielding Box Plots.png",plot = arrangeCatcherStats, type = png())
 
