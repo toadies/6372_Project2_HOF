@@ -5,6 +5,8 @@ library(pROC)
 library(ROCR)
 library(pheatmap)
 library(randomForest)
+library(class)
+library(kknn)
 
 
 #GB SetWD
@@ -84,6 +86,26 @@ auc(roccurve)
 
 
 
-#################### Left Over Turkey Code #################### 
+#################### K Nearest Neighbor #################### 
+
+#Knn
+#train[,c(cols.Inducted, cols.Batting.avg)]
+set.seed(123)
+#knn.train = train(Attrition~., data=emp_train[,c(col.CatKNN)], method="knn", trControl=control, tuneGrid=grid1)
+knn.train = train(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.Batting.avg)], method="knn")
+knn.test = knn(train[,c(cols.Inducted, cols.Batting.avg)][,-1], test[,c(cols.Inducted, cols.Batting.avg)][,-1], train[,c(cols.Inducted, cols.Batting.avg)][,1], k=9)
+knnPrediction <-confusionMatrix(table(knn.test, test$HallOfFame_inducted))
+kNN_Hall_Prediction
 
 
+
+# K Weighted
+set.seed(123)
+kknn.train = train.kknn(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.Batting.avg)], kmax=30, distance = 2)
+prediction <- predict(kknn.train, test[,c(cols.Inducted, cols.Batting.avg)][,-1])
+kWeightedPrediction <- confusionMatrix(table(test[,c(cols.Inducted, cols.Batting.avg)][,1],prediction))
+knnPrediction <-confusionMatrix(table(knn.test, test$HallOfFame_inducted))
+kWeightedPrediction
+#graphics.off() 
+#par(mar=c(5,5,5,5))
+plot(kknn.train)
