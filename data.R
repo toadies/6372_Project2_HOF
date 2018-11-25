@@ -1,6 +1,6 @@
 # Get/Set Directory
 #getwd()
-#Batters <- read.csv("/Users/gbourzik/Documents/GitHub/6372_Project2_HOF/data/Batters.csv")
+Batters <- read.csv("/Users/gbourzik/Documents/GitHub/6372_Project2_HOF/data/Batters.csv")#
 
 # Read the Data
 #Batters <- read.csv("6372_Project2_HOF/data/Batters.csv", na.strings = "NULL")
