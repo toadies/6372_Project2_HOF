@@ -3,7 +3,7 @@
 #Batters <- read.csv("/Users/gbourzik/Documents/GitHub/6372_Project2_HOF/data/Batters.csv")
 
 # Read the Data
-#Batters <- read.csv("6372_Project2_HOF/data/Batters.csv", na.strings = "NULL")
+Batters <- read.csv("6372_Project2_HOF/data/Batters.csv", na.strings = "NULL")
 
 
 
@@ -36,6 +36,7 @@ Batters$Batting_1B <-  Batters$Batting_H - Batters$Batting_2B - Batters$Batting_
 Batters$Batting_Average <- Batters$Batting_H / Batters$Batting_AB
 Batters$Walks_Average <- Batters$Batting_BB / Batters$Batting_AB
 Batters$Runs_Average <- Batters$Batting_R / Batters$Batting_AB
+Batters$RBI_Average <- Batters$Batting_RBI / Batters$Batting_AB
 Batters$Slugging <- (1*Batters$Batting_1B + 2*Batters$Batting_2B + + 3*Batters$Batting_3B + 4*Batters$Batting_HR) /  Batters$Batting_AB 
 Batters$OPS <- (Batters$Batting_H + Batters$Batting_BB + Batters$Batting_HBP) / (Batters$Batting_AB + Batters$Batting_BB + Batters$Batting_HBP + Batters$Batting_SF)
 # Batters$OPSPlus - Can't Do because we need league OPS each year and Park factors Blah
