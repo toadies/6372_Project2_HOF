@@ -1,6 +1,9 @@
+#setwd("/Users/gbourzik/Documents/GitHub/")
 result <- read.csv("6372_Project2_HOF/data/result.csv")
 train <- read.csv("6372_Project2_HOF/data/train.csv")
 test <- read.csv("6372_Project2_HOF/data/test.csv")
+
+
 
 names(result)
 #Columes
