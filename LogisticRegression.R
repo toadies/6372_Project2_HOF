@@ -11,7 +11,7 @@ library(randomForest)
 #setwd("/Users/gbourzik/Documents/GitHub/")
 source("6372_Project2_HOF/ImportData.R")
 
-x <- model.matrix(HallOfFame_inducted~.,train[,c(cols.Inducted, 3, cols.Batting.avg, cols.Fielding)])
+x <- model.matrix(HallOfFame_inducted~.,train[,c(cols.Inducted, 33, cols.Batting.avg, cols.Fielding)])
 #convert class to numerical variable
 y <- ifelse(train$HallOfFame_inducted=="Y",1,0)
 #perform grid search to find optimal value of lambda

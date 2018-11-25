@@ -5,6 +5,11 @@ library(ggplot2)
 library(GGally)
 # install.packages("ggpubr")
 library(ggpubr)
+library(pheatmap)
+library(RColorBrewer)
+library(tree)
+
+
 
 # Batting Stats Compared to HOF
 pairs(result[,cols.Batting], col=result$HallOfFame_inducted)
@@ -266,3 +271,155 @@ arrangeCatcherStats <- ggarrange(
 )
 ggsave("6372_Project2_HOF/Catcher Fielding Box Plots.png",plot = arrangeCatcherStats, type = png())
 
+
+# Cluster Analysis
+
+batting.avg.stats <- result[,cols.Batting.avg]
+batting.avg.stats$Inducted <- result$HallOfFame_inducted
+batting.avg.stats$position <- result$position
+# Means plot for Batting Average
+sumstats<-aggregate(Batting_Average~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotBattingAvg <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("Batting Average")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotBattingAvg
+
+# Means plot for walks per at bat
+sumstats<-aggregate(Walks_Average~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotWalksAvg <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("Walks per plate apperance")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotWalksAvg
+
+# Means plot for Runs at bat
+sumstats<-aggregate(Runs_Average~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotRunAvg <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("Runs per plate apperance")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotRunAvg
+
+# Means plot for Runs at bat
+sumstats<-aggregate(RBI_Average~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotRBIAvg <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("RBI per plate apperance")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotRBIAvg
+
+# Means plot for Slugging Percentage
+sumstats<-aggregate(Slugging~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotSlugging <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("Slugging Percentage")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotSlugging
+
+# Means plot for Slugging Percentage
+sumstats<-aggregate(OPS~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotOPS <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("On-base Percentage")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotOPS
+
+# Means plot for Slugging Percentage
+sumstats<-aggregate(ISO~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotISO <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("Isolated Power")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotISO
+
+# Means plot for Slugging Percentage
+sumstats<-aggregate(wOBA~Inducted*position,data=batting.avg.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotWOBA <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+    ylab("weighted on-base average")+
+    geom_line()+
+    geom_point()+
+    geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotWOBA
+
+arrangeBattingAvgStats <- ggarrange(
+    meansPlotBattingAvg,
+    meansPlotWalksAvg,
+    meansPlotRunAvg,
+    meansPlotRBI,
+    meansPlotSlugging,
+    meansPlotOPS,
+    meansPlotISO,
+    meansPlotWOBA,
+    labels = c("Batting Average","Walks per AB", "Runs per AB", "RBI per AB", "Slugging %", "On-base %", "Isolated Power", "Weighted On-Base %"),
+    ncol = 2, 
+    nrow = 4
+)
+ggsave("6372_Project2_HOF/Batting Average Stats Means Plot.png",plot = arrangeBattingAvgStats, type = png())
+
+
+# PCA
+pc.result<-prcomp(result[,c(33, cols.Batting.avg)],scale.=TRUE)
+pc.scores<-pc.result$x
+pc.scores<-data.frame(pc.scores)
+pc.scores$Inducted<-result$HallOfFame_inducted
+
+pc.result
+summary(pc.result)
+
+length(c(33, cols.Batting.avg))
+
+#Scree plot
+eigenvals<-(pc.result$sdev)^2
+plot(1:length(c(33, cols.Batting.avg)),eigenvals/sum(eigenvals),type="l",main="Scree Plot PC's",ylab="Prop. Var. Explained",ylim=c(0,1))
+cumulative.prop<-cumsum(eigenvals/sum(eigenvals))
+lines(1:length(c(33, cols.Batting.avg)),cumulative.prop,lty=2)
+
+ggplot(data = pc.scores, aes(x = PC1, y = PC2)) +
+    geom_point(aes(col=Inducted), size=2)+
+    ggtitle("PCA of Batting Statistics")
+
+#hierarchical cluster
+
+x<-t(result[,c(33, cols.Batting.avg)])
+colnames(x)<- ifelse(result$HallOfFame_inducted=="Y",1,0)
+heatMapBatting <- pheatmap(
+    x,
+    annotation_col=data.frame(Inducted=result$HallOfFame_inducted),
+    scale="row",
+    legend=T,
+    # kmeans_k = 2,
+    color=colorRampPalette(c("blue","white", "red"),space = "rgb")(100)
+)
+heatMapBatting
+ggsave("6372_Project2_HOF/Batting Cluster.png",plot = heatMapBatting, type = png())
+
+# Decision Tree
+short.tree<-tree(HallOfFame_inducted~.,result[,c(cols.Inducted, 33, cols.Batting.avg)])
+summary(short.tree)
+plot(short.tree)
+text(short.tree)
+
+# Load rpart and rpart.plot
+library(rpart)
+# install.packages("rpart.plot")
+library(rpart.plot)
+# Create a decision tree model
+tree <- rpart(HallOfFame_inducted~.,result[,c(cols.Inducted, 33, cols.Batting.avg, cols.Fielding)], cp=.02)
+# Visualize the decision tree with rpart.plot
+rpart.plot(tree, box.palette="RdBu", shadow.col="gray", nn=TRUE)
