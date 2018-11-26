@@ -8,17 +8,17 @@ library(randomForest)
 library(class)
 library(kknn)
 
+train.full <- train[,c(cols.Inducted, cols.Batting.no.cor)]
+
 
 #GB SetWD
 source("6372_Project2_HOF/ImportData.R")
-x <- model.matrix(HallOfFame_inducted~.,train[,c(cols.Inducted, 33, cols.Batting.avg, cols.Fielding)])
+x <- model.matrix(HallOfFame_inducted~.,train.full)
 #convert class to numerical variable
 y <- ifelse(train$HallOfFame_inducted=="Y",1,0)
-#perform grid search to find optimal value of lambda
-#family= binomial => logistic regression, alpha=1 => lasso
-# check docs to explore other type.measure options
+
 set.seed(1234)
-glm.lasso <- cv.glmnet(x,y,alpha=1,family="binomial",type.measure = "mse", nfolds=10 )
+glm.lasso <- cv.glmnet(x,y,alpha=1,family="binomial",type.measure = "mse")
 #plot result
 plot(glm.lasso)
 
@@ -28,30 +28,38 @@ lambda_min <- glm.lasso$lambda.min
 lambda_1se <- glm.lasso$lambda.1se
 #regression coefficients
 glm.lasso.coef <- coef(glm.lasso,s=lambda_1se)
-View(data.frame(name = glm.lasso.coef@Dimnames[[1]][glm.lasso.coef@i + 1], coefficient = glm.lasso.coef@x))
 
 # Rerun coef variables to remove penatlties caused by LASSO
 data.frame(name = glm.lasso.coef@Dimnames[[1]][glm.lasso.coef@i + 1], coefficient = glm.lasso.coef@x)
+
+# LASSO OUTPUT
+
 
 # Get column indecis
 cols.lasso.coef <- glm.lasso.coef@i
 cols.lasso.coef <- cols.lasso.coef[-1] # Remove the intercept
 
-train.reduce = train[,c(cols.Inducted, 3, cols.Batting.avg, cols.Fielding)][,cols.lasso.coef]
-train.reduce$HallOfFame_inducted <- train$HallOfFame_inducted
+train.reduce = train.full[,cols.lasso.coef]
+# # Include doubles and HR to round out the slugging stat
+# train.reduce$Batting_2B <- train$Batting_2B
+# train.reduce$Batting_HR <- train$Batting_HR
+names(train.reduce)
+
+train.reduce$HallOfFame_inducted <- train.full$HallOfFame_inducted
 
 glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
-c <- summary(glm.manual)
+summary(glm.manual)
 
-View(glm.manual$coefficients)
-View(exp(cbind(coef(glm.manual), confint(glm.manual))))
-result$lasso_prob <- predict.glm(glm.manual,newx = result)
+glm.manual$coefficients
+exp(cbind(coef(glm.manual), confint(glm.manual)))
 
+dim(test)
+lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
 
 #predict class, type=”class”
-x.test <- model.matrix(HallOfFame_inducted~.,test[,c(cols.Inducted, 3, cols.Batting.avg, cols.Fielding)])
-y.test <- ifelse(test$HallOfFame_inducted=="Y",1,0)
-lasso_prob <- predict(glm.lasso,newx = x.test, s=lambda_1se,type="response")
+# x.test <- model.matrix(HallOfFame_inducted~.,test)
+# y.test <- ifelse(test$HallOfFame_inducted=="Y",1,0)
+# lasso_prob <- predict(glm.lasso,newx = x.test, s=lambda_1se,type="response")
 
 #translate probabilities to predictions
 contrasts(test$HallOfFame_inducted)
@@ -71,18 +79,10 @@ lasso_predict[lasso_prob>.5] <- "Y"
 cf <-confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
 cf
 
-
-
-
-
 # ROC Curves (Updated)
 roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
 plot(roccurve)
 auc(roccurve)
-
-
-
-
 
 #################### K Nearest Neighbor #################### 
 

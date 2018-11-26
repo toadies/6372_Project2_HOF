@@ -8,6 +8,7 @@ library(ggpubr)
 library(pheatmap)
 library(RColorBrewer)
 library(tree)
+library(tidyr)
 
 
 
@@ -374,25 +375,55 @@ ggsave("6372_Project2_HOF/Batting Average Stats Means Plot.png",plot = arrangeBa
 
 
 # PCA
-pc.result<-prcomp(result[,c(33, cols.Batting.avg)],scale.=TRUE)
+pc.result<-prcomp(result[,cols.Batting.no.cor],scale.=TRUE)
 pc.scores<-pc.result$x
 pc.scores<-data.frame(pc.scores)
 pc.scores$Inducted<-result$HallOfFame_inducted
 
 pc.result
 summary(pc.result)
-
-length(c(33, cols.Batting.avg))
+n <- dim(result[,cols.Batting.no.cor])[2]
 
 #Scree plot
 eigenvals<-(pc.result$sdev)^2
-plot(1:length(c(33, cols.Batting.avg)),eigenvals/sum(eigenvals),type="l",main="Scree Plot PC's",ylab="Prop. Var. Explained",ylim=c(0,1))
 cumulative.prop<-cumsum(eigenvals/sum(eigenvals))
-lines(1:length(c(33, cols.Batting.avg)),cumulative.prop,lty=2)
+screePlotData <- data.frame( factor = 1:n, eigenvals = eigenvals/sum(eigenvals), cumulative.prop = cumulative.prop)
+screePlotData <- melt(screePlotData, id = "factor")
+PCAScreePlot <- ggplot(data = screePlotData,
+    aes(x=factor, y=value, colour=variable)) +
+    ylab("Prop. Var. Explained") +
+    geom_line(aes(linetype=variable), size=1) + 
+    theme(legend.position="none") +
+    scale_x_continuous("Factors", 1:n, 1:n) +
+    ggtitle("PCA Screen Plot")
 
-ggplot(data = pc.scores, aes(x = PC1, y = PC2)) +
+plotsPC1vPC2 <- ggplot(data = pc.scores, aes(x = PC1, y = PC2)) +
     geom_point(aes(col=Inducted), size=2)+
-    ggtitle("PCA of Batting Statistics")
+    ggtitle("PC1 Vs. PC2") + 
+    theme(legend.position="none")
+
+plotsPC1vPC3 <- ggplot(data = pc.scores, aes(x = PC1, y = PC3)) +
+    geom_point(aes(col=Inducted), size=2)+
+    ggtitle("PC1 Vs. PC3") + 
+    theme(legend.position="none")
+
+plotsPC2vPC3 <- ggplot(data = pc.scores, aes(x = PC2, y = PC3)) +
+    geom_point(aes(col=Inducted), size=2)+
+    ggtitle("PC2 Vs. PC3") + 
+    theme(legend.position="none")
+
+arrangePCAAnalysis <- ggarrange(
+    PCAScreePlot,
+    plotsPC1vPC2,
+    plotsPC1vPC3,
+    plotsPC2vPC3,
+    # labels = c("Scree Plot", "PC1 Vs. PC2", "PC1 Vs. PC3", "PC2 Vs. PC3"),
+    ncol = 2, 
+    nrow = 2
+)
+ggsave("6372_Project2_HOF/PCA Analysis.png",plot = arrangePCAAnalysis, type = png())
+
+
 
 #hierarchical cluster
 
@@ -420,6 +451,6 @@ library(rpart)
 # install.packages("rpart.plot")
 library(rpart.plot)
 # Create a decision tree model
-tree <- rpart(HallOfFame_inducted~.,result[,c(cols.Inducted, 33, cols.Batting.avg, cols.Fielding)], cp=.02)
+tree <- rpart(HallOfFame_inducted~.,result[,c(cols.Inducted, cols.Batting.no.cor, cols.Fielding)], cp=.02)
 # Visualize the decision tree with rpart.plot
 rpart.plot(tree, box.palette="RdBu", shadow.col="gray", nn=TRUE)

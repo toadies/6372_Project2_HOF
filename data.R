@@ -49,6 +49,23 @@ Batters$wOBA <- (0.69*(Batters$Batting_BB-Batters$Batting_IBB) +
          Batters$Batting_SF+
          Batters$Batting_HBP)
 
+Batters$R.perAB <- Batters$Batting_R / Batters$Batting_AB
+Batters$H.perAB <- Batters$Batting_H / Batters$Batting_AB
+Batters$singles.perAB <- Batters$Batting_1B / Batters$Batting_AB
+Batters$doubles.perAB <- Batters$Batting_2B / Batters$Batting_AB
+Batters$triples.perAB <- Batters$Batting_3B / Batters$Batting_AB
+Batters$HR.perAB <- Batters$Batting_HR / Batters$Batting_AB
+Batters$RBI.perAB <- Batters$Batting_RBI / Batters$Batting_AB
+Batters$SB.perAB <- Batters$Batting_SB / Batters$Batting_AB
+Batters$CS.perAB <- Batters$Batting_CS / Batters$Batting_AB
+Batters$BB.perAB <- Batters$Batting_BB / Batters$Batting_AB
+Batters$SO.perAB <- Batters$Batting_SO / Batters$Batting_AB
+Batters$IBB.perAB <- Batters$Batting_IBB / Batters$Batting_AB
+Batters$HBP.perAB <- Batters$Batting_HBP / Batters$Batting_AB
+Batters$SH.perAB <- Batters$Batting_SH / Batters$Batting_AB
+Batters$SF.perAB <- Batters$Batting_SF / Batters$Batting_AB
+Batters$GIDP.perAB <- Batters$Batting_GIDP / Batters$Batting_AB
+
 dim(Batters)
 sum(Batters$HallOfFame_inducted == "Y")
 
@@ -65,11 +82,10 @@ sum(result$HallOfFame_inducted == "Y")
 
 # Remove Apperances
 result <- result[,-c(49:65,116)]
-str(result)
+names(result)
 
 #Create a Training & Test Set
 n <- nrow(result)
-
 set.seed(123) 
 index<-sample( 1:nrow(result),floor(n * .6) )
 train<-result[index,]
@@ -82,7 +98,6 @@ write.csv(test, "6372_Project2_HOF/data/test.csv", row.names=FALSE)
 #write.csv(result, "data/result.csv", row.names=FALSE)
 #write.csv(train, "data/train.csv", row.names=FALSE)
 #write.csv(test, "data/test.csv", row.names=FALSE)
-
 
 dim(train)
 dim(test)
