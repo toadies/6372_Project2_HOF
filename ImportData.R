@@ -19,3 +19,4 @@ cols.Awards <- c(60:89)
 cols.Positions <- c(90:98)
 # Add Data For GGPairs
 cols.BattingAvg_w_Hall <- c(2:5,100:105)
+cols.KNNData <- c(cols.Batting, cols.Batting.avg, cols.Fielding, cols.Awards)

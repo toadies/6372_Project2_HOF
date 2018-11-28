@@ -1,7 +1,6 @@
 # Read the Data
+
 Batters <- read.csv("6372_Project2_HOF/data/Batters.csv", na.strings = "NULL")
-
-
 
 
 # Identify position most appeared
@@ -94,10 +93,7 @@ test<-result[-index,]
 write.csv(result, "6372_Project2_HOF/data/result.csv", row.names=FALSE)
 write.csv(train, "6372_Project2_HOF/data/train.csv", row.names=FALSE)
 write.csv(test, "6372_Project2_HOF/data/test.csv", row.names=FALSE)
-#Grant Version
-#write.csv(result, "data/result.csv", row.names=FALSE)
-#write.csv(train, "data/train.csv", row.names=FALSE)
-#write.csv(test, "data/test.csv", row.names=FALSE)
+
 
 dim(train)
 dim(test)
