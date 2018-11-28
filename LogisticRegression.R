@@ -32,9 +32,6 @@ glm.lasso.coef <- coef(glm.lasso,s=lambda_1se)
 # Rerun coef variables to remove penatlties caused by LASSO
 data.frame(name = glm.lasso.coef@Dimnames[[1]][glm.lasso.coef@i + 1], coefficient = glm.lasso.coef@x)
 
-# LASSO OUTPUT
-
-
 # Get column indecis
 cols.lasso.coef <- glm.lasso.coef@i
 cols.lasso.coef <- cols.lasso.coef[-1] # Remove the intercept
@@ -83,6 +80,14 @@ cf
 roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
 plot(roccurve)
 auc(roccurve)
+
+# Assumptions
+# perform lack of fit
+install.packages("generalhoslem")
+library(generalhoslem)
+# https://cran.r-project.org/web/packages/generalhoslem/generalhoslem.pdf
+?logitgof
+plot(glm.manual$residuals)
 
 #################### K Nearest Neighbor #################### 
 
