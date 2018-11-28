@@ -8,16 +8,15 @@ library(randomForest)
 library(class)
 library(kknn)
 
-train.full <- train[,c(cols.Inducted, cols.Batting.no.cor)]
-
-
 #GB SetWD
 source("6372_Project2_HOF/ImportData.R")
+
+train.full <- train[,c(cols.Inducted, cols.Batting, cols.Batting.avg, cols.Awards)]
+
 x <- model.matrix(HallOfFame_inducted~.,train.full)
 #convert class to numerical variable
 y <- ifelse(train$HallOfFame_inducted=="Y",1,0)
 
-set.seed(1234)
 glm.lasso <- cv.glmnet(x,y,alpha=1,family="binomial",type.measure = "mse")
 #plot result
 plot(glm.lasso)
@@ -37,44 +36,42 @@ cols.lasso.coef <- glm.lasso.coef@i
 cols.lasso.coef <- cols.lasso.coef[-1] # Remove the intercept
 
 train.reduce = train.full[,cols.lasso.coef]
-# # Include doubles and HR to round out the slugging stat
-# train.reduce$Batting_2B <- train$Batting_2B
-# train.reduce$Batting_HR <- train$Batting_HR
-names(train.reduce)
-
 train.reduce$HallOfFame_inducted <- train.full$HallOfFame_inducted
 
+#Assess Model
+glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
+summary(glm.manual)
+
+# ACK Runs & RBIS? remove Runs
+# exclude runs, since RBI is related
+runsColIndex <- which(colnames(train.reduce)=="Batting_R")
+train.reduce <- train.reduce[,-runsColIndex]
+names(train.reduce)
+
+# Rerun
+glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
+summary(glm.manual)
+
+# Exclude Awards_LouGehrigMemorialAward
+# only 57 awarded from 1985 to 2011
+  louColIndex <- which(colnames(train.reduce)=="Awards_LouGehrigMemorialAward")
+train.reduce <- train.reduce[,-louColIndex]
+names(train.reduce)
+
+# Rerun
 glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
 summary(glm.manual)
 
 glm.manual$coefficients
 exp(cbind(coef(glm.manual), confint(glm.manual)))
 
-dim(test)
+# Test Model
 lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
-
-#predict class, type=”class”
-# x.test <- model.matrix(HallOfFame_inducted~.,test)
-# y.test <- ifelse(test$HallOfFame_inducted=="Y",1,0)
-# lasso_prob <- predict(glm.lasso,newx = x.test, s=lambda_1se,type="response")
-
-#translate probabilities to predictions
-contrasts(test$HallOfFame_inducted)
 lasso_predict <- rep("N",nrow(test))
 lasso_predict[lasso_prob>.5] <- "Y"
 
-# GB - Update Prediction on Traing Data to ensure we used right data set
-# Me just playing this can be deleted
-#contrasts(train$HallOfFame_inducted)
-#lasso_predict <- rep("N",nrow(train))
-#lasso_predict[lasso_prob>.5] <- "Y"
-
-
-#confusion matrix (Updated)
-# Confusion Variables are wrong...
-#confusionMatrix(table(lasso_predict,lasso_predict))
-cf <-confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
-cf
+# confusion matrix (Updated)
+confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
 
 # ROC Curves (Updated)
 roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)

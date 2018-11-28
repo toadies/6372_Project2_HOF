@@ -454,3 +454,11 @@ library(rpart.plot)
 tree <- rpart(HallOfFame_inducted~.,result[,c(cols.Inducted, cols.Batting.no.cor, cols.Fielding)], cp=.02)
 # Visualize the decision tree with rpart.plot
 rpart.plot(tree, box.palette="RdBu", shadow.col="gray", nn=TRUE)
+
+#Awards Data
+head(result[,cols.Awards])
+
+sum(result$HallOfFame_inducted == "Y" & result$Awards_GoldGlove >= 6)
+result$AllStarAwards <- result$Awards_BaseballMagazineAllStar + result$Awards_TSNAllStar
+boxplot( AllStarAwards~HallOfFame_inducted, data = result)
+

@@ -29,9 +29,6 @@ Batters$Batting_1B <-  Batters$Batting_H - Batters$Batting_2B - Batters$Batting_
 
 # Batting Stats
 Batters$Batting_Average <- Batters$Batting_H / Batters$Batting_AB
-Batters$Walks_Average <- Batters$Batting_BB / Batters$Batting_AB
-Batters$Runs_Average <- Batters$Batting_R / Batters$Batting_AB
-Batters$RBI_Average <- Batters$Batting_RBI / Batters$Batting_AB
 Batters$Slugging <- (1*Batters$Batting_1B + 2*Batters$Batting_2B + + 3*Batters$Batting_3B + 4*Batters$Batting_HR) /  Batters$Batting_AB 
 Batters$OPS <- (Batters$Batting_H + Batters$Batting_BB + Batters$Batting_HBP) / (Batters$Batting_AB + Batters$Batting_BB + Batters$Batting_HBP + Batters$Batting_SF)
 # Batters$OPSPlus - Can't Do because we need league OPS each year and Park factors Blah
@@ -64,6 +61,8 @@ Batters$HBP.perAB <- Batters$Batting_HBP / Batters$Batting_AB
 Batters$SH.perAB <- Batters$Batting_SH / Batters$Batting_AB
 Batters$SF.perAB <- Batters$Batting_SF / Batters$Batting_AB
 Batters$GIDP.perAB <- Batters$Batting_GIDP / Batters$Batting_AB
+
+Batters$TotalAllStarAwards <- Batters$Awards_BaseballMagazineAllStar + Batters$Awards_TSNAllStar
 
 dim(Batters)
 sum(Batters$HallOfFame_inducted == "Y")
