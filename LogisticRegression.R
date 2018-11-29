@@ -54,7 +54,7 @@ summary(glm.manual)
 
 # Exclude Awards_LouGehrigMemorialAward
 # only 57 awarded from 1985 to 2011
-  louColIndex <- which(colnames(train.reduce)=="Awards_LouGehrigMemorialAward")
+louColIndex <- which(colnames(train.reduce)=="Awards_LouGehrigMemorialAward")
 train.reduce <- train.reduce[,-louColIndex]
 names(train.reduce)
 
@@ -78,6 +78,54 @@ roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
 plot(roccurve)
 auc(roccurve)
 
+# Add Homeruns since that is a big player in Hall voters
+train.reduce$Batting_HR <- train.full$Batting_HR
+names(train.reduce)
+# Rerun
+glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
+summary(glm.manual)
+
+glm.manual$coefficients
+exp(cbind(coef(glm.manual), confint(glm.manual)))
+
+# Test Model
+lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
+lasso_predict <- rep("N",nrow(test))
+lasso_predict[lasso_prob>.5] <- "Y"
+
+# confusion matrix (Updated)
+confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
+
+# ROC Curves (Updated)
+roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
+plot(roccurve)
+auc(roccurve)
+
+# Replace Triples with Homeruns since that is a big player in Hall voters
+tripleColIndex <- which(colnames(train.reduce)=="Batting_3B")
+train.reduce <- train.reduce[,-tripleColIndex]
+names(train.reduce)
+# Rerun
+glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
+summary(glm.manual)
+
+glm.manual$coefficients
+exp(cbind(coef(glm.manual), confint(glm.manual)))
+
+# Test Model
+lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
+lasso_predict <- rep("N",nrow(test))
+lasso_predict[lasso_prob>.5] <- "Y"
+
+# confusion matrix (Updated)
+confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
+
+# ROC Curves (Updated)
+roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
+plot(roccurve)
+auc(roccurve)
+
+
 # Assumptions
 # perform lack of fit
 install.packages("generalhoslem")
@@ -86,24 +134,3 @@ library(generalhoslem)
 ?logitgof
 plot(glm.manual$residuals)
 
-#################### K Nearest Neighbor #################### 
-
-#Knn
-#train[,c(cols.Inducted, cols.Batting.avg)]
-set.seed(123)
-#knn.train = train(Attrition~., data=emp_train[,c(col.CatKNN)], method="knn", trControl=control, tuneGrid=grid1)
-knn.train = train(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.KNNData)], method="knn")
-knn.test = knn(train[,c(cols.Inducted, cols.KNNData)][,-1], test[,c(cols.Inducted, cols.KNNData)][,-1], train[,c(cols.Inducted, cols.KNNData)][,1], k=27)
-knnPrediction <-confusionMatrix(table(knn.test, test$HallOfFame_inducted))
-knnPrediction
-
-# K Weighted
-set.seed(123)
-kknn.train = train.kknn(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.KNNData)], kmax=30, distance = 2)
-prediction <- predict(kknn.train, test[,c(cols.Inducted, cols.KNNData)][,-1])
-kWeightedPrediction <- confusionMatrix(table(test[,c(cols.Inducted, cols.KNNData)][,1],prediction))
-kWeightedPrediction <-confusionMatrix(table(knn.test, test$HallOfFame_inducted))
-kWeightedPrediction
-#graphics.off() 
-#par(mar=c(5,5,5,5))
-plot(kknn.train)
