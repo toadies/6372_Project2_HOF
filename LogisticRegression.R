@@ -143,25 +143,15 @@ glm.final.positions <- glm(HallOfFame_inducted~
                              Batting_Average+
                              AllstarGames+
                              TotalAllStarAwards+
-                             position.if+
-                             Batting_R:position.if+
-                             Batting_3B:position.if+
-                             Batting_Average:position.if+
-                             AllstarGames:position.if+
-                             TotalAllStarAwards:position.if+
-                             position.of+
-                             Batting_R:position.of+
-                             Batting_3B:position.of+
-                             Batting_Average:position.of+
-                             AllstarGames:position.of+
-                             TotalAllStarAwards:position.of
-                             
-                            
+                             position.c
                            ,data = train.final.positions, family = binomial)
 summary(glm.final.positions)
+# Test Model
+test$final.positions.prob <- predict.glm(glm.final.positions,test[,-cols.Inducted],type="response")
+test$final.positions.predicted <- ifelse(test$final.positions.prob>.5,"Y","N")
+confusionMatrix(table(test$final.positions.predicted, test$HallOfFame_inducted))
 
-#### Results keep returning NA values, indicating to similar results.  No interaction can be found
-
+# No interaction terms helps by position.  Including Catcher alone improves the model
 
 # Assumptions
 # perform lack of fit)
