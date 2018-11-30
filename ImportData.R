@@ -4,6 +4,9 @@ train <- read.csv("6372_Project2_HOF/data/train.csv")
 test <- read.csv("6372_Project2_HOF/data/test.csv")
 names(result)
 
+result$nameLast <- as.character(result$nameLast)
+result$nameFirst <- as.character(result$nameFirst)
+
 #Columes
 cols.Inducted <- 6
 cols.HallOfFame <- c(2:5)
@@ -17,3 +20,7 @@ cols.Positions <- c(90:98)
 # Add Data For GGPairs
 cols.BattingAvg_w_Hall <- c(2:5,100:105)
 cols.KNNData <- c(cols.Batting, cols.Batting.avg, cols.Fielding, cols.Awards)
+
+result.truth <- result$HallOfFame_inducted
+train.truth <- train$HallOfFame_inducted
+test.truth <- test$HallOfFame_inducted

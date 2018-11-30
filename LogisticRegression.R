@@ -7,18 +7,27 @@ library(pheatmap)
 library(randomForest)
 library(class)
 library(kknn)
+library(dplyr)
 
 #GB SetWD
 source("6372_Project2_HOF/ImportData.R")
 
+# Create a very simple model to compare againist
+glm.simple <- glm(HallOfFame_inducted~Batting_H,data = train, family = binomial)
+summary(glm.simple)
+# Test Model
+test$simple.prob <- predict.glm(glm.simple,test[,-cols.Inducted],type="response")
+test$simple.predicted <- ifelse(test$simple.prob>.5,"Y","N")
+confusionMatrix(table(test$simple.pred, test$HallOfFame_inducted))
+
+# Let's get our data for the LASSO
 train.full <- train[,c(cols.Inducted, cols.Batting, cols.Batting.avg, cols.Awards)]
 
 x <- model.matrix(HallOfFame_inducted~.,train.full)
-#convert class to numerical variable
 y <- ifelse(train$HallOfFame_inducted=="Y",1,0)
 
+set.seed(123)
 glm.lasso <- cv.glmnet(x,y,alpha=1,family="binomial",type.measure = "mse")
-#plot result
 plot(glm.lasso)
 
 #min value of lambda
@@ -42,10 +51,10 @@ train.reduce$HallOfFame_inducted <- train.full$HallOfFame_inducted
 glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
 summary(glm.manual)
 
-# ACK Runs & RBIS? remove Runs
-# exclude runs, since RBI is related
-runsColIndex <- which(colnames(train.reduce)=="Batting_R")
-train.reduce <- train.reduce[,-runsColIndex]
+# Clean up the model to try to prevent overfitting
+# RBIs are not useful
+rbiColIndex <- which(colnames(train.reduce)=="Batting_RBI")
+train.reduce <- train.reduce[,-rbiColIndex]
 names(train.reduce)
 
 # Rerun
@@ -58,79 +67,104 @@ louColIndex <- which(colnames(train.reduce)=="Awards_LouGehrigMemorialAward")
 train.reduce <- train.reduce[,-louColIndex]
 names(train.reduce)
 
-# Rerun
-glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
-summary(glm.manual)
+train.final <- train.reduce
 
-glm.manual$coefficients
-exp(cbind(coef(glm.manual), confint(glm.manual)))
+# Rerun
+glm.final <- glm(HallOfFame_inducted~.,data = train.final, family = binomial)
+summary(glm.final)
+
+glm.final$coefficients
+exp(cbind(coef(glm.final), confint(glm.final)))
 
 # Test Model
-lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
-lasso_predict <- rep("N",nrow(test))
-lasso_predict[lasso_prob>.5] <- "Y"
+test$final.prob <- predict.glm(glm.final,test[,-cols.Inducted],type="response")
+test$final.predicted <- ifelse(test$final.prob>.5,"Y","N")
+confusionMatrix(table(test$final.predicted, test$HallOfFame_inducted))
 
-# confusion matrix (Updated)
-confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
+########### Sanitity checks if other variables are impactful #############
+#
+## Add Homeruns
+train.final.incl.hr <- train.final
+train.final.incl.hr$Batting_HR <- train.full$Batting_HR
+names(train.final.incl.hr)
 
-# ROC Curves (Updated)
-roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
-plot(roccurve)
-auc(roccurve)
+### Rerun
+glm.incl.hr <- glm(HallOfFame_inducted~.,data = train.final.incl.hr, family = binomial)
+summary(glm.incl.hr)
 
-# Add Homeruns since that is a big player in Hall voters
-train.reduce$Batting_HR <- train.full$Batting_HR
-names(train.reduce)
-# Rerun
-glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
-summary(glm.manual)
+### Test Model
+test$incl.hr.prob <- predict.glm(glm.incl.hr,test[,-cols.Inducted],type="response")
+test$incl.hr.predicted <- ifelse(test$incl.hr.prob>.5,"Y","N")
+confusionMatrix(table(test$incl.hr.predicted, test$HallOfFame_inducted))
 
-glm.manual$coefficients
-exp(cbind(coef(glm.manual), confint(glm.manual)))
+#### No change in model, remove HRs
 
-# Test Model
-lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
-lasso_predict <- rep("N",nrow(test))
-lasso_predict[lasso_prob>.5] <- "Y"
+## Replace Triples with Homeruns since that is a big player in Hall voters
+tripleColIndex <- which(colnames(train.final.incl.hr)=="Batting_3B")
+train.final.excl.3b <- train.final.incl.hr[,-tripleColIndex]
+names(train.final.excl.3b)
 
-# confusion matrix (Updated)
-confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
+### Rerun
+glm.excl.3b <- glm(HallOfFame_inducted~.,data = train.final.excl.3b, family = binomial)
+summary(glm.excl.3b)
 
-# ROC Curves (Updated)
-roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
-plot(roccurve)
-auc(roccurve)
+#### Significant but negative? That's not good, let's research why
+is_outlier <- function(x) {
+  return(x > quantile(x, 0.75) + 1.5 * IQR(x))
+}
+result$HR.outlier <- is_outlier(result$Batting_HR)
+boxplotHRs <- ggplot(result, aes(x=HallOfFame_inducted, y=Batting_HR)) + 
+  geom_boxplot(outlier.shape = NA) +
+  geom_text(aes(label=ifelse(HR.outlier,nameLast,"")), position = 'jitter')
 
-# Replace Triples with Homeruns since that is a big player in Hall voters
-tripleColIndex <- which(colnames(train.reduce)=="Batting_3B")
-train.reduce <- train.reduce[,-tripleColIndex]
-names(train.reduce)
-# Rerun
-glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
-summary(glm.manual)
+boxplotHRs
+ggsave("6372_Project2_HOF/Homerun Outliers.png",plot = boxplotHRs, type = png(), height = 10)
 
-glm.manual$coefficients
-exp(cbind(coef(glm.manual), confint(glm.manual)))
+#### THEY ARE ALL CHEATERS!
 
-# Test Model
-lasso_prob <- predict.glm(glm.manual,test[,-cols.Inducted],type="response")
-lasso_predict <- rep("N",nrow(test))
-lasso_predict[lasso_prob>.5] <- "Y"
+# Can we improve our model by including an interaction with positions?
+train.final.positions <- train.final
+train.final.positions$position.c <- train$position.c
+train.final.positions$position.1b <- train$position.1b
+train.final.positions$position.2b <- train$position.2b
+train.final.positions$position.3b <- train$position.3b
+train.final.positions$position.ss <- train$position.ss
+train.final.positions$position.lf <- train$position.lf
+train.final.positions$position.rf <- train$position.rf
+train.final.positions$position.cf <- train$position.cf
 
-# confusion matrix (Updated)
-confusionMatrix(table(test$HallOfFame_inducted, lasso_predict))
+train.final.positions$position.of <- ifelse(train$position.lf == 1 | train$position.cf == 1 | train$position.rf == 1, 1, 0)
+train.final.positions$position.if <- ifelse(train.final.positions$positions.of == 1, 0 , 1)
+names(train.final.positions)
 
-# ROC Curves (Updated)
-roccurve <- roc(test$HallOfFame_inducted ~ lasso_prob)
-plot(roccurve)
-auc(roccurve)
+glm.final.positions <- glm(HallOfFame_inducted~
+                             Batting_R+
+                             Batting_3B+
+                             Batting_Average+
+                             AllstarGames+
+                             TotalAllStarAwards+
+                             position.if+
+                             Batting_R:position.if+
+                             Batting_3B:position.if+
+                             Batting_Average:position.if+
+                             AllstarGames:position.if+
+                             TotalAllStarAwards:position.if+
+                             position.of+
+                             Batting_R:position.of+
+                             Batting_3B:position.of+
+                             Batting_Average:position.of+
+                             AllstarGames:position.of+
+                             TotalAllStarAwards:position.of
+                             
+                            
+                           ,data = train.final.positions, family = binomial)
+summary(glm.final.positions)
+
+#### Results keep returning NA values, indicating to similar results.  No interaction can be found
 
 
 # Assumptions
-# perform lack of fit
-install.packages("generalhoslem")
-library(generalhoslem)
-# https://cran.r-project.org/web/packages/generalhoslem/generalhoslem.pdf
-?logitgof
-plot(glm.manual$residuals)
+# perform lack of fit)
+library(MKmisc)
+HLgof.test(fit = fitted(glm.manual), obs = train$HallOfFame_inducted)
 
