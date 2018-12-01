@@ -396,6 +396,7 @@ PCAScreePlot <- ggplot(data = screePlotData,
     theme(legend.position="none") +
     scale_x_continuous("Factors", 1:n, 1:n) +
     ggtitle("PCA Screen Plot")
+PCAScreePlot
 
 plotsPC1vPC2 <- ggplot(data = pc.scores, aes(x = PC1, y = PC2)) +
     geom_point(aes(col=Inducted), size=2)+
@@ -462,3 +463,81 @@ sum(result$HallOfFame_inducted == "Y" & result$Awards_GoldGlove >= 6)
 result$AllStarAwards <- result$Awards_BaseballMagazineAllStar + result$Awards_TSNAllStar
 boxplot( AllStarAwards~HallOfFame_inducted, data = result)
 
+# Interaction Terms for Positions and awards
+# 
+# 
+# 
+#   
+
+awards.stats <- result.post.1961[,cols.Awards]
+awards.stats$Inducted <- result.post.1961$HallOfFame_inducted
+awards.stats$position <- result.post.1961$position
+
+# Means plot for TSN Allstar
+sumstats<-aggregate(Awards_TSNAllStar~Inducted*position,data=awards.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotTSNAwards <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("TSN Allstar Award")+
+  geom_line()+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotTSNAwards
+
+# Means plot for Awards_GoldGlove
+sumstats<-aggregate(Awards_GoldGlove~Inducted*position,data=awards.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotGoldGlove <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Gold Glove")+
+  geom_line()+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotGoldGlove
+
+# Means plot for Awards_HutchAward
+sumstats<-aggregate(Awards_HutchAward~Inducted*position,data=awards.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotHutch <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Hutch Award")+
+  geom_line()+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotHutch
+# To Many Zeros, remove
+
+# Means plot for AllstarGames
+sumstats<-aggregate(AllstarGames~Inducted*position,data=awards.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotAllstarGames <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Allstar Apperances")+
+  geom_line()+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotAllstarGames
+
+# Means plot for Awards_TSNMajorLeaguePlayerOfTheYear
+sumstats<-aggregate(Awards_TSNMajorLeaguePlayerOfTheYear~Inducted*position,data=awards.stats,mysummary)
+sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
+meansPlotTSNPlayer <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("TSN Major League Player of the Year")+
+  geom_line()+
+  geom_point()+
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+meansPlotTSNPlayer
+summary(result$Awards_TSNMajorLeaguePlayerOfTheYear)
+
+# arrangeBattingAvgStats <- ggarrange(
+#   meansPlotBattingAvg,
+#   meansPlotWalksAvg,
+#   meansPlotRunAvg,
+#   meansPlotRBI,
+#   meansPlotSlugging,
+#   meansPlotOPS,
+#   meansPlotISO,
+#   meansPlotWOBA,
+#   labels = c("Batting Average","Walks per AB", "Runs per AB", "RBI per AB", "Slugging %", "On-base %", "Isolated Power", "Weighted On-Base %"),
+#   ncol = 2, 
+#   nrow = 4
+# )
+# ggsave("6372_Project2_HOF/Batting Average Stats Means Plot.png",plot = arrangeBattingAvgStats, type = png())
+# 
+ 

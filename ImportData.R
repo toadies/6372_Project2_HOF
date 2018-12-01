@@ -24,3 +24,12 @@ cols.KNNData <- c(cols.Batting, cols.Batting.avg, cols.Fielding, cols.Awards)
 result.truth <- result$HallOfFame_inducted
 train.truth <- train$HallOfFame_inducted
 test.truth <- test$HallOfFame_inducted
+
+result.post.1961 <- read.csv("6372_Project2_HOF/data/result.post.1961.csv")
+train.post.1961 <- read.csv("6372_Project2_HOF/data/train.post.1961.csv")
+test.post.1961 <- read.csv("6372_Project2_HOF/data/test.post.1961.csv")
+names(result.post.1961)
+
+result.post.1961$nameLast <- as.character(result.post.1961$nameLast)
+result.post.1961$nameFirst <- as.character(result.post.1961$nameFirst)
+dim(train.post.1961)

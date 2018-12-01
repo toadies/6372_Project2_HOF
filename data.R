@@ -78,6 +78,8 @@ result <- result[result$finalYear <= 2011 | result$HallOfFame_inducted=="Y",]
 dim(result)
 sum(result$HallOfFame_inducted == "Y")
 
+names(result)
+
 # Remove Apperances
 result <- result[,-c(49:65,116)]
 names(result)
@@ -96,3 +98,20 @@ write.csv(test, "6372_Project2_HOF/data/test.csv", row.names=FALSE)
 
 dim(train)
 dim(test)
+
+# Create a post 1961 Data Set
+# http://www.netshrine.com/era.html
+result$debut <- as.Date(result$debut)
+result$debutYear <- as.numeric(format(result$debut, "%Y"))
+
+result.post.1961 <- result[result$debutYear >= 1961, ]
+dim(result.post.1961)
+n <- nrow(result.post.1961)
+set.seed(123) 
+index<-sample( 1:nrow(result.post.1961),floor(n * .6) )
+train.post.1961<-result.post.1961[index,]
+test.post.1961<-result.post.1961[-index,]
+
+write.csv(result.post.1961, "6372_Project2_HOF/data/result.post.1961.csv", row.names=FALSE)
+write.csv(train.post.1961, "6372_Project2_HOF/data/train.post.1961.csv", row.names=FALSE)
+write.csv(test.post.1961, "6372_Project2_HOF/data/test.post.1961.csv", row.names=FALSE)

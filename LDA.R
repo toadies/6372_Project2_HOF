@@ -1,8 +1,7 @@
 source("6372_Project2_HOF/ImportData.R")
 
-train.lda.x <- train[,c(cols.Batting, cols.Batting.avg)]
-train.lda.y <- train[,cols.Inducted]
-str(train[,c(cols.Inducted, cols.Batting, cols.Batting.avg, cols.Awards)])
+train.lda.x <- train.post.1961[,c(cols.Batting.no.cor)]
+train.lda.y <- train.post.1961[,cols.Inducted]
 
 fit.lda <- lda(
             train.lda.y ~ .,
@@ -14,7 +13,8 @@ preds <- as.data.frame(preds)
 
 #confusion matrix
 prd<-predict(fit.lda, newdata = test)$class
-table(prd,test$HallOfFame_inducted)
+confusionMatrix(table(prd,test$HallOfFame_inducted))
+
 
 pred <- prediction(preds[,2],train.lda.y)
 roc.perf = performance(pred, measure = "tpr", x.measure = "fpr")
