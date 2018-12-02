@@ -260,6 +260,7 @@ glm.transform <- glm(HallOfFame_inducted~
                   Batting_R+
                   lBatting_3B+
                   AllstarGames+
+                    Batting_Average+
                   lTotalAllstarAwards+
                   position.c
              ,data = train.transform, family = binomial)

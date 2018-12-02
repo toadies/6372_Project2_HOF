@@ -375,14 +375,14 @@ ggsave("6372_Project2_HOF/Batting Average Stats Means Plot.png",plot = arrangeBa
 
 
 # PCA
-pc.result<-prcomp(result[,cols.Batting.no.cor],scale.=TRUE)
+pc.result<-prcomp(result[,c(cols.Batting.no.cor, 89, 121)],scale.=TRUE)
 pc.scores<-pc.result$x
 pc.scores<-data.frame(pc.scores)
 pc.scores$Inducted<-result$HallOfFame_inducted
 
 pc.result
 summary(pc.result)
-n <- dim(result[,cols.Batting.no.cor])[2]
+n <- dim(result[,c(cols.Batting.no.cor, 89, 121)])[2]
 
 #Scree plot
 eigenvals<-(pc.result$sdev)^2
@@ -402,16 +402,19 @@ plotsPC1vPC2 <- ggplot(data = pc.scores, aes(x = PC1, y = PC2)) +
     geom_point(aes(col=Inducted), size=2)+
     ggtitle("PC1 Vs. PC2") + 
     theme(legend.position="none")
+plotsPC1vPC2
 
 plotsPC1vPC3 <- ggplot(data = pc.scores, aes(x = PC1, y = PC3)) +
     geom_point(aes(col=Inducted), size=2)+
     ggtitle("PC1 Vs. PC3") + 
     theme(legend.position="none")
+plotsPC1vPC3
 
 plotsPC2vPC3 <- ggplot(data = pc.scores, aes(x = PC2, y = PC3)) +
     geom_point(aes(col=Inducted), size=2)+
     ggtitle("PC2 Vs. PC3") + 
     theme(legend.position="none")
+plotsPC1vPC3
 
 arrangePCAAnalysis <- ggarrange(
     PCAScreePlot,
@@ -422,8 +425,67 @@ arrangePCAAnalysis <- ggarrange(
     ncol = 2, 
     nrow = 2
 )
-ggsave("6372_Project2_HOF/PCA Analysis.png",plot = arrangePCAAnalysis, type = png())
+arrangePCAAnalysis <- annotate_figure( arrangePCAAnalysis, 
+                                       top = text_grob("All Players")
+)
+arrangePCAAnalysis
+ggsave("6372_Project2_HOF/PCA Analysis all players.png",plot = arrangePCAAnalysis, type = png())
 
+pc.result<-prcomp(result.post.1961[,c(cols.Batting.no.cor, 89, 121)],scale.=TRUE)
+pc.scores<-pc.result$x
+pc.scores<-data.frame(pc.scores)
+pc.scores$Inducted<-result.post.1961$HallOfFame_inducted
+
+pc.result
+summary(pc.result)
+n <- dim(result.post.1961[,c(cols.Batting.no.cor, 89, 121)])[2]
+
+#Scree plot
+eigenvals<-(pc.result$sdev)^2
+cumulative.prop<-cumsum(eigenvals/sum(eigenvals))
+screePlotData <- data.frame( factor = 1:n, eigenvals = eigenvals/sum(eigenvals), cumulative.prop = cumulative.prop)
+screePlotData <- melt(screePlotData, id = "factor")
+PCAScreePlot <- ggplot(data = screePlotData,
+                       aes(x=factor, y=value, colour=variable)) +
+  ylab("Prop. Var. Explained") +
+  geom_line(aes(linetype=variable), size=1) + 
+  theme(legend.position="none") +
+  scale_x_continuous("Factors", 1:n, 1:n) +
+  ggtitle("PCA Screen Plot")
+PCAScreePlot
+
+plotsPC1vPC2 <- ggplot(data = pc.scores, aes(x = PC1, y = PC2)) +
+  geom_point(aes(col=Inducted), size=2)+
+  ggtitle("PC1 Vs. PC2") + 
+  theme(legend.position="none")
+plotsPC1vPC2
+
+plotsPC1vPC3 <- ggplot(data = pc.scores, aes(x = PC1, y = PC3)) +
+  geom_point(aes(col=Inducted), size=2)+
+  ggtitle("PC1 Vs. PC3") + 
+  theme(legend.position="none")
+plotsPC1vPC3
+
+plotsPC2vPC3 <- ggplot(data = pc.scores, aes(x = PC2, y = PC3)) +
+  geom_point(aes(col=Inducted), size=2)+
+  ggtitle("PC2 Vs. PC3") + 
+  theme(legend.position="none")
+plotsPC1vPC3
+
+arrangePCAAnalysis <- ggarrange(
+  PCAScreePlot,
+  plotsPC1vPC2,
+  plotsPC1vPC3,
+  plotsPC2vPC3,
+  # labels = c("Scree Plot", "PC1 Vs. PC2", "PC1 Vs. PC3", "PC2 Vs. PC3"),
+  ncol = 2, 
+  nrow = 2
+)
+arrangePCAAnalysis <- annotate_figure( arrangePCAAnalysis, 
+  top = text_grob("Players started after 1961")
+)
+arrangePCAAnalysis
+ggsave("6372_Project2_HOF/PCA Analysis post 1961.png",plot = arrangePCAAnalysis, type = png())
 
 
 #hierarchical cluster
