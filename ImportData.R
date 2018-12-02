@@ -16,6 +16,7 @@ cols.Batting <- c(32:48,99)
 cols.Batting.no.cor <- c(99,34, 36:48)
 cols.Fielding <- c(51:59)
 cols.Awards <- c(60:89,121)
+cols.Awards_Key <- c(64, 89)
 cols.Positions <- c(90:98)
 # Add Data For GGPairs
 cols.BattingAvg_w_Hall <- c(2:5,100:105)

@@ -10,14 +10,15 @@ source("6372_Project2_HOF/ImportData.R")
 #Knn
 #train[,c(cols.Inducted, cols.Batting.avg)]
 set.seed(123)
-knn.train = train(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.Batting)], method="knn")
+knn.train = train(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.Batting, cols.Awards_Key)], method="knn")
 knn.test = knn(
-  train[, c(cols.Batting, cols.Batting.avg, cols.Awards)], 
-  test[, c(cols.Batting, cols.Batting.avg, cols.Awards)], 
+  train[, c(cols.Batting, cols.Batting.avg, cols.Awards,cols.Awards_Key)], 
+  test[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
   train$HallOfFame_inducted, 
   k=19
 )
 knnPrediction <- confusionMatrix(table(test$HallOfFame_inducted, knn.test))
+knnPrediction
 knnPrediction$table  %>%   kable() %>%      kable_styling(bootstrap_options = "striped", full_width = F) %>% scroll_box(width = "700px", height = "200px")
 
 
@@ -26,7 +27,7 @@ set.seed(123)
 kknn.train = train.kknn(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.KNNData)], kmax=30, distance = 2)
 prediction <- predict(kknn.train, test[,c(cols.Inducted, cols.KNNData)][,-1])
 kWeightedPrediction <- confusionMatrix(table(test[,c(cols.Inducted, cols.KNNData)][,1],prediction))
-kWeightedPrediction <-confusionMatrix(table(knn.test, test$HallOfFame_inducted))
+kWeightedPrediction <-confusionMatrix(table(test$HallOfFame_inducted, knn.test))
 kWeightedPrediction
 #graphics.off() 
 #par(mar=c(5,5,5,5))
@@ -34,14 +35,14 @@ plot(kknn.train)
 
 # KNN With 1961 Data
 set.seed(123)
-knn.train.post.1961 = train(HallOfFame_inducted~., data=train.post.1961[,c(cols.Inducted, cols.Batting)], method="knn")
+knn.train.post.1961 = train(HallOfFame_inducted~., data=train.post.1961[,c(cols.Inducted, cols.Batting, cols.Awards_Key)], method="knn")
 knn.test.post.1961 = knn(
-  train.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards)], 
-  test.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards)], 
+  train.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
+  test.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
   train.post.1961$HallOfFame_inducted, 
   k=19
 )
-kNNPost1961Prediction <- confusionMatrix(table(knn.test.post.1961,test.post.1961$HallOfFame_inducted))
+kNNPost1961Prediction <- confusionMatrix(table(test.post.1961$HallOfFame_inducted,knn.test.post.1961))
 kNNPost1961Prediction$table
 
 # Compare
