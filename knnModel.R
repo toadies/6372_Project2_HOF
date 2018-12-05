@@ -11,15 +11,17 @@ source("6372_Project2_HOF/ImportData.R")
 #train[,c(cols.Inducted, cols.Batting.avg)]
 set.seed(123)
 knn.train = train(HallOfFame_inducted~., data=train[,c(cols.Inducted, cols.Batting, cols.Awards_Key)], method="knn")
+set.seed(123)
 knn.test = knn(
   train[, c(cols.Batting, cols.Batting.avg, cols.Awards,cols.Awards_Key)], 
   test[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
   train$HallOfFame_inducted, 
   k=19
 )
-knnPrediction <- confusionMatrix(table(test$HallOfFame_inducted, knn.test))
+knnPrediction <- confusionMatrix(table(knn.test, test$HallOfFame_inducted))
 knnPrediction
-knnPrediction$table  %>%   kable() %>%      kable_styling(bootstrap_options = "striped", full_width = F) %>% scroll_box(width = "700px", height = "200px")
+
+# knnPrediction$table  %>%   kable() %>%      kable_styling(bootstrap_options = "striped", full_width = F) %>% scroll_box(width = "700px", height = "200px")
 
 
 # K Weighted
@@ -36,14 +38,36 @@ plot(kknn.train)
 # KNN With 1961 Data
 set.seed(123)
 knn.train.post.1961 = train(HallOfFame_inducted~., data=train.post.1961[,c(cols.Inducted, cols.Batting, cols.Awards_Key)], method="knn")
+set.seed(123)
+knn.prob = knn(
+  train.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
+  test.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
+  train.post.1961$HallOfFame_inducted, 
+  k=19,
+  prob = TRUE
+)
+
+set.seed(123)
 knn.test.post.1961 = knn(
   train.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
   test.post.1961[, c(cols.Batting, cols.Batting.avg, cols.Awards, cols.Awards_Key)], 
   train.post.1961$HallOfFame_inducted, 
   k=19
 )
-kNNPost1961Prediction <- confusionMatrix(table(test.post.1961$HallOfFame_inducted,knn.test.post.1961))
+
+test.post.1961$knn.prob <- attributes(knn.prob)$prob
+test.post.1961$knn.predicted <- knn.prob
+roccurve <- roc(response = test.post.1961$HallOfFame_inducted, predictor = test.post.1961$knn.prob)
+plot(roccurve)
+auc(roccurve)
+
+kNNPost1961Prediction <- confusionMatrix(table(test.post.1961$knn.predicted, test.post.1961$HallOfFame_inducted))
 kNNPost1961Prediction$table
+kNNPost1961Prediction
+
+
+auc.train <- performance(pred, measure = "auc")
+auc.train <- auc.train@y.values
 
 # Compare
 dt0 <- data.frame(cbind(t(knnPrediction$overall),t(knnPrediction$byClass)))
