@@ -116,8 +116,57 @@ summary(glm.positions)
 
 # Not players played before 1961.  Create a new model that will focus on players played after 1961
 
-# Assumptions
-# perform lack of fit)
-library(MKmisc)
-HLgof.test(fit = fitted(glm.manual), obs = train$HallOfFame_inducted)
+# Compare to original model
+glm.post.1961.final <- glm(HallOfFame_inducted~
+                             Batting_R+
+                             Batting_3B+
+                             Batting_Average+
+                             AllstarGames+
+                             TotalAllStarAwards+
+                             position.c
+                           ,data = train.post.1961, family = binomial)
+summary(glm.post.1961.final)
 
+glm.post.1961.final <- glm(HallOfFame_inducted~
+                             Batting_R+
+                             Batting_3B+
+                             AllstarGames
+                           ,data = train.post.1961, family = binomial)
+summary(glm.post.1961.final)
+
+# Test Model
+test.post.1961$final.prob <- predict.glm(glm.post.1961.final,test.post.1961[,-cols.Inducted],type="response")
+test.post.1961$final.predicted <- ifelse(test.post.1961$final.prob>.5,"Y","N")
+confusionMatrix(table(test.post.1961$final.predicted, test.post.1961$HallOfFame_inducted))
+
+train.post.1961$final.prob <- predict.glm(glm.post.1961.final,train.post.1961[,-cols.Inducted],type="response")
+train.post.1961$final.predicted <- ifelse(train.post.1961$final.prob>.5,"Y","N")
+confusionMatrix(table(train.post.1961$final.predicted, train.post.1961$HallOfFame_inducted))
+
+
+# No interaction terms helps by position.  Including Catcher alone improves the model
+glm.post.1961.final$coefficients
+exp(cbind(coef(glm.post.1961.final), confint(glm.post.1961.final)))
+
+
+car::vif(glm.post.1961.final)
+round( 1 - ( glm.post.1961.final$deviance / glm.post.1961.final$null.deviance ), 2 )
+
+ggplot( test.post.1961, aes( final.prob, color = HallOfFame_inducted ) ) + 
+  geom_density( size = 1 ) +
+  ggtitle( "Training Set's Predicted Score" ) + 
+  theme(legend.position="none")
+
+source("6372_Project2_HOF/unbalanced_functions.r")
+
+length(train.post.1961$final.prob)
+length(train.post.1961$HallOfFame_inducted)
+
+accuracy_info <- AccuracyCutoffInfo( 
+  train.post.1961$final.prob,
+  train.post.1961$HallOfFame_inducted,
+  test.post.1961$final.prob,
+  test.post.1961$HallOfFame_inducted
+)
+# define the theme for the next plot
+accuracy_info$plot

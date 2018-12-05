@@ -10,7 +10,15 @@ library(RColorBrewer)
 library(tree)
 library(tidyr)
 
+# What is our accuracy if we predicted nothing?
 
+prop.table( table( result$HallOfFame_inducted ) )
+
+result.summary <- aggregate(result[, c(cols.Batting, cols.Batting.avg)], list(result$HallOfFame_inducted), mean)
+result.summary <- rbind( result.summary, aggregate(result[, c(cols.Batting, cols.Batting.avg)], list(result$HallOfFame_inducted), sd))
+
+
+# write.csv(result.summary, "6372_Project2_HOF/battingsummary.csv", row.names=FALSE)
 
 # Batting Stats Compared to HOF
 pairs(result[,cols.Batting], col=result$HallOfFame_inducted)
@@ -525,81 +533,72 @@ sum(result$HallOfFame_inducted == "Y" & result$Awards_GoldGlove >= 6)
 result$AllStarAwards <- result$Awards_BaseballMagazineAllStar + result$Awards_TSNAllStar
 boxplot( AllStarAwards~HallOfFame_inducted, data = result)
 
-# Interaction Terms for Positions and awards
-# 
-# 
-# 
-#   
+# Interaction Terms for Positions on Final Model
 
-awards.stats <- result.post.1961[,cols.Awards]
-awards.stats$Inducted <- result.post.1961$HallOfFame_inducted
-awards.stats$position <- result.post.1961$position
-
-# Means plot for TSN Allstar
-sumstats<-aggregate(Awards_TSNAllStar~Inducted*position,data=awards.stats,mysummary)
+# Means plot for Batting_R
+result$Inducted <- result$HallOfFame_inducted
+sumstats<-aggregate(Batting_R~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
-meansPlotTSNAwards <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("TSN Allstar Award")+
+meansPlotRuns <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Runs Award")+
   geom_line()+
   geom_point()+
-  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
-meansPlotTSNAwards
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
+  theme(legend.position="none")
+meansPlotRuns
 
-# Means plot for Awards_GoldGlove
-sumstats<-aggregate(Awards_GoldGlove~Inducted*position,data=awards.stats,mysummary)
+# Means plot for Batting_3B
+sumstats<-aggregate(Batting_3B~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
-meansPlotGoldGlove <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("Gold Glove")+
+meansPlotTriples <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Triples")+
   geom_line()+
   geom_point()+
-  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
-meansPlotGoldGlove
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
+  theme(legend.position="none")
+meansPlotTriples
 
-# Means plot for Awards_HutchAward
-sumstats<-aggregate(Awards_HutchAward~Inducted*position,data=awards.stats,mysummary)
+# Means plot for Batting_Average
+sumstats<-aggregate(Batting_Average~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
-meansPlotHutch <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("Hutch Award")+
+meansPlotBattingAvg <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Batting Average")+
   geom_line()+
   geom_point()+
-  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
-meansPlotHutch
-# To Many Zeros, remove
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
+  theme(legend.position="none")
+meansPlotBattingAvg
 
 # Means plot for AllstarGames
-sumstats<-aggregate(AllstarGames~Inducted*position,data=awards.stats,mysummary)
+sumstats<-aggregate(AllstarGames~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
 meansPlotAllstarGames <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
   ylab("Allstar Apperances")+
   geom_line()+
   geom_point()+
-  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
+  theme(legend.position="none")
 meansPlotAllstarGames
 
-# Means plot for Awards_TSNMajorLeaguePlayerOfTheYear
-sumstats<-aggregate(Awards_TSNMajorLeaguePlayerOfTheYear~Inducted*position,data=awards.stats,mysummary)
+# Means plot for TotalAllStarAwards
+sumstats<-aggregate(TotalAllStarAwards~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
-meansPlotTSNPlayer <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("TSN Major League Player of the Year")+
+meansPlotAllstarAwards <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
+  ylab("Total All Star Awards")+
   geom_line()+
   geom_point()+
-  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1)
-meansPlotTSNPlayer
-summary(result$Awards_TSNMajorLeaguePlayerOfTheYear)
+  geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
+  theme(legend.position="none")
+meansPlotAllstarAwards
 
-# arrangeBattingAvgStats <- ggarrange(
-#   meansPlotBattingAvg,
-#   meansPlotWalksAvg,
-#   meansPlotRunAvg,
-#   meansPlotRBI,
-#   meansPlotSlugging,
-#   meansPlotOPS,
-#   meansPlotISO,
-#   meansPlotWOBA,
-#   labels = c("Batting Average","Walks per AB", "Runs per AB", "RBI per AB", "Slugging %", "On-base %", "Isolated Power", "Weighted On-Base %"),
-#   ncol = 2, 
-#   nrow = 4
-# )
-# ggsave("6372_Project2_HOF/Batting Average Stats Means Plot.png",plot = arrangeBattingAvgStats, type = png())
-# 
+arrangeBattingAvgStats <- ggarrange(
+  meansPlotRuns,
+  meansPlotTriples,
+  meansPlotBattingAvg,
+  ncol = 3,
+  nrow = 1
+)
+arrangeBattingAvgStats
+ggsave("6372_Project2_HOF/Final Model Means Plot.png",plot = arrangeBattingAvgStats, type = png(), width = 6, height = 2)
+
  

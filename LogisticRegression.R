@@ -19,12 +19,18 @@ summary(glm.simple)
 train$simple.prob <- predict.glm(glm.simple,train[,-cols.Inducted],type="response")
 train$simple.predicted <- ifelse(train$simple.prob>.5,"Y","N")
 confusionMatrix(table(train$simple.pred, train$HallOfFame_inducted))
+roccurve <- roc(response = train$HallOfFame_inducted, predictor = train$simple.prob)
+auc(roccurve)
 
 
 # Test Model
 test$simple.prob <- predict.glm(glm.simple,test[,-cols.Inducted],type="response")
 test$simple.predicted <- ifelse(test$simple.prob>.5,"Y","N")
 confusionMatrix(table(test$simple.pred, test$HallOfFame_inducted))
+roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$simple.prob)
+auc(roccurve)
+
+
 
 # Let's get our data for the LASSO
 train.full <- train[,c(cols.Inducted, cols.Batting, cols.Batting.avg, cols.Awards)]
@@ -54,6 +60,11 @@ train.reduce$HallOfFame_inducted <- train.full$HallOfFame_inducted
 #Assess Model
 glm.manual <- glm(HallOfFame_inducted~.,data = train.reduce, family = binomial)
 summary(glm.manual)
+
+train$initial.prob <- predict.glm(glm.manual,train[,-cols.Inducted],type="response")
+test$initial.prob <- predict.glm(glm.stats.manual,test[,-cols.Inducted],type="response")
+roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$initial.prob)
+auc(roccurve)
 
 # Clean up the model to try to prevent overfitting
 # RBIs are not useful
@@ -85,6 +96,10 @@ test$final.prob <- predict.glm(glm.final,test[,-cols.Inducted],type="response")
 test$final.predicted <- ifelse(test$final.prob>.5,"Y","N")
 confusionMatrix(table(test$final.predicted, test$HallOfFame_inducted))
 
+roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$final.prob)
+auc(roccurve)
+
+
 ########### Sanitity checks if other variables are impactful #############
 #
 ## Add Homeruns
@@ -100,7 +115,8 @@ summary(glm.incl.hr)
 test$incl.hr.prob <- predict.glm(glm.incl.hr,test[,-cols.Inducted],type="response")
 test$incl.hr.predicted <- ifelse(test$incl.hr.prob>.5,"Y","N")
 confusionMatrix(table(test$incl.hr.predicted, test$HallOfFame_inducted))
-
+roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$incl.hr.prob)
+auc(roccurve)
 #### No change in model, remove HRs
 
 ## Replace Triples with Homeruns since that is a big player in Hall voters
@@ -112,14 +128,25 @@ names(train.final.excl.3b)
 glm.excl.3b <- glm(HallOfFame_inducted~.,data = train.final.excl.3b, family = binomial)
 summary(glm.excl.3b)
 
+### Test Model
+test$excl.3b.prob <- predict.glm(glm.excl.3b,test[,-cols.Inducted],type="response")
+test$excl.3b.predicted <- ifelse(test$excl.3b.prob>.5,"Y","N")
+confusionMatrix(table(pred=test$incl.hr.predicted, truth=test$HallOfFame_inducted))
+roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$excl.3b.prob)
+auc(roccurve)
+
 #### Significant but negative? That's not good, let's research why
 is_outlier <- function(x) {
   return(x > quantile(x, 0.75) + 1.5 * IQR(x))
 }
-result$HR.outlier <- is_outlier(result$Batting_HR)
+result[result$HallOfFame_inducted=="N","HR.outlier"] <- is_outlier(result[result$HallOfFame_inducted=="N",]$Batting_HR)
+result[result$HallOfFame_inducted=="Y","HR.outlier"] <- is_outlier(result[result$HallOfFame_inducted=="Y",]$Batting_HR)
+
 boxplotHRs <- ggplot(result, aes(x=HallOfFame_inducted, y=Batting_HR)) + 
   geom_boxplot(outlier.shape = NA) +
-  geom_text(aes(label=ifelse(HR.outlier,nameLast,"")), position = 'jitter')
+  geom_text(aes(label=ifelse(HR.outlier,nameLast,"")), position = 'jitter') +
+  ylab("Home Runs")+
+  xlab("Inducted")
 
 boxplotHRs
 ggsave("6372_Project2_HOF/Homerun Outliers.png",plot = boxplotHRs, type = png(), height = 10)
@@ -172,17 +199,22 @@ exp(cbind(coef(glm.final), confint(glm.final)))
 test$final.prob <- predict.glm(glm.final,test[,-cols.Inducted],type="response")
 test$final.predicted <- ifelse(test$final.prob>.5,"Y","N")
 confusionMatrix(table(test$final.predicted, test$HallOfFame_inducted))
+roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$final.prob)
+auc(roccurve)
+
 
 # How did we originally do?
-train$final.positions.prob <- predict.glm(glm.final.positions,train[,-cols.Inducted],type="response")
-train$final.positions.predicted <- ifelse(train$final.positions.prob>.5,"Y","N")
-confusionMatrix(table(train$final.positions.predicted, train$HallOfFame_inducted))
+train$final.prob <- predict.glm(glm.final,train[,-cols.Inducted],type="response")
+train$final.predicted <- ifelse(train$final.prob>.5,"Y","N")
+confusionMatrix(table(train$final.predicted, train$HallOfFame_inducted))
+roccurve <- roc(response = train$HallOfFame_inducted, predictor = train$final.prob)
+auc(roccurve)
 
 # Specificity is at 60% and 60% on test and training
 # Let's find out why?
 
-train.inHOF <- train[train$HallOfFame_inducted == "Y" & train$final.positions.predicted == "N",c(19,20,26,27,100,37,39,89,121,91)]
-test.inHOF <- test[test$HallOfFame_inducted == "Y" & test$final.positions.predicted == "N",c(19,20,26,27,100,37,39,89,121,91)]
+train.inHOF <- train[train$HallOfFame_inducted == "Y" & train$final.predicted == "N",c(19,20,26,27,100,37,39,89,121,91)]
+test.inHOF <- test[test$HallOfFame_inducted == "Y" & test$final.predicted == "N",c(19,20,26,27,100,37,39,89,121,91)]
 train.inHOF$train <- "Y"
 test.inHOF$train <- "N"
 review.inHOF <- rbind(train.inHOF, test.inHOF)
@@ -221,7 +253,11 @@ confusionMatrix(table(result.post.1961$final.positions.predicted, result.post.19
 
 # Assumptions
 ### VIF
-car::vif(model)
+car::vif(glm.final)
+
+# R-Sql
+round( 1 - ( glm.final$deviance / glm.final$null.deviance ), 2 )
+
 
 probabilities <- predict(glm.final, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "Y", "N")
@@ -310,3 +346,66 @@ glm.final.positions.data %>% top_n(3, .cooksd)
 ggplot(glm.final.positions.data, aes(index, .std.resid)) + 
   geom_point(aes(color = HallOfFame_inducted), alpha = .5) +
   theme_bw()
+
+
+# Eliminate Bias
+# Let's get our data for the LASSO
+train.post.1961.stats.full <- train.post.1961[,c(cols.Inducted, cols.Batting.no.cor, cols.Batting.avg)]
+
+x <- model.matrix(HallOfFame_inducted~.,train.post.1961.stats.full)
+y <- ifelse(train.post.1961.stats.full$HallOfFame_inducted=="Y",1,0)
+
+set.seed(123)
+glm.lasso <- cv.glmnet(x,y,alpha=1,family="binomial",type.measure = "mse")
+plot(glm.lasso)
+
+#min value of lambda
+lambda_min <- glm.lasso$lambda.min
+#best value of lambda
+lambda_1se <- glm.lasso$lambda.1se
+#regression coefficients
+glm.lasso.coef <- coef(glm.lasso,s=lambda_1se)
+data.frame(name = glm.lasso.coef@Dimnames[[1]][glm.lasso.coef@i + 1], coefficient = glm.lasso.coef@x)
+
+# Get column indecis
+cols.lasso.coef <- glm.lasso.coef@i
+cols.lasso.coef <- cols.lasso.coef[-1] # Remove the intercept
+
+train.post.1961.stats.reduce = train.post.1961.stats.full[,cols.lasso.coef]
+train.post.1961.stats.reduce$HallOfFame_inducted <- train.post.1961.stats.full$HallOfFame_inducted
+
+#Assess Model
+glm.stats.manual <- glm(HallOfFame_inducted~.,data = train.post.1961.stats.reduce, family = binomial)
+summary(glm.stats.manual)
+
+test$final.stats.prob <- predict.glm(glm.stats.manual,test[,-cols.Inducted],type="response")
+test$final.stats.predicted <- ifelse(test$final.stats.prob>.5,"Y","N")
+confusionMatrix(table(test$final.stats.predicted, test$HallOfFame_inducted))
+
+train.post.1961$final.stats.prob <- predict.glm(glm.stats.manual,train.post.1961[,-cols.Inducted],type="response")
+train.post.1961$final.stats.predicted <- ifelse(train.post.1961$final.stats.prob>.1,"Y","N")
+
+test.post.1961$final.stats.prob <- predict.glm(glm.stats.manual,test.post.1961[,-cols.Inducted],type="response")
+test.post.1961$final.stats.predicted <- ifelse(test.post.1961$final.stats.prob>.1,"Y","N")
+confusionMatrix(table(test.post.1961$final.stats.predicted, test.post.1961$HallOfFame_inducted))
+roccurve <- roc(response = test.post.1961$HallOfFame_inducted, predictor = test.post.1961$final.stats.prob)
+auc(roccurve)
+
+ggplot(test.post.1961, aes(as.numeric(row.names(test.post.1961)), final.stats.prob)) + 
+  geom_point(aes(color = HallOfFame_inducted), alpha = .5) +
+  theme_bw()
+
+
+source("6372_Project2_HOF/unbalanced_functions.r")
+
+train.post.1961$truth <- ifelse(train.post.1961$HallOfFame_inducted=="Y",1,0)
+test.post.1961$truth <- ifelse(test.post.1961$HallOfFame_inducted=="Y",1,0)
+
+accuracy_info <- AccuracyCutoffInfo( 
+  train.post.1961$final.stats.prob,
+  train.post.1961$HallOfFame_inducted,
+  test.post.1961$final.stats.prob,
+  test.post.1961$HallOfFame_inducted
+)
+# define the theme for the next plot
+accuracy_info$plot
