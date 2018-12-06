@@ -2,10 +2,14 @@
 result <- read.csv("6372_Project2_HOF/data/result.csv")
 train <- read.csv("6372_Project2_HOF/data/train.csv")
 test <- read.csv("6372_Project2_HOF/data/test.csv")
+result.recents <- read.csv("6372_Project2_HOF/data/result.recents.csv")
 names(result)
 
 result$nameLast <- as.character(result$nameLast)
 result$nameFirst <- as.character(result$nameFirst)
+
+result.recents$nameLast <- as.character(result.recents$nameLast)
+result.recents$nameFirst <- as.character(result.recents$nameFirst)
 
 #Columes
 cols.Inducted <- 6
@@ -16,7 +20,7 @@ cols.Batting <- c(32:48,99)
 cols.Batting.no.cor <- c(99,34, 36:48)
 cols.Fielding <- c(51:59)
 cols.Awards <- c(60:89,121)
-cols.Awards_Key <- c(64, 89)
+cols.Awards_Key <- c(121, 89)
 cols.Positions <- c(90:98)
 # Add Data For GGPairs
 cols.BattingAvg_w_Hall <- c(2:5,100:105)

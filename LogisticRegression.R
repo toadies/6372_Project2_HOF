@@ -8,6 +8,8 @@ library(randomForest)
 library(class)
 library(kknn)
 library(dplyr)
+library(tidyr)
+library(broom)
 
 #GB SetWD
 source("6372_Project2_HOF/ImportData.R")
@@ -99,7 +101,6 @@ confusionMatrix(table(test$final.predicted, test$HallOfFame_inducted))
 roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$final.prob)
 auc(roccurve)
 
-
 ########### Sanitity checks if other variables are impactful #############
 #
 ## Add Homeruns
@@ -146,7 +147,8 @@ boxplotHRs <- ggplot(result, aes(x=HallOfFame_inducted, y=Batting_HR)) +
   geom_boxplot(outlier.shape = NA) +
   geom_text(aes(label=ifelse(HR.outlier,nameLast,"")), position = 'jitter') +
   ylab("Home Runs")+
-  xlab("Inducted")
+  xlab("Inducted")+
+  ggtitle("Figure 2 - Home Runs with Players in 4th quartile")
 
 boxplotHRs
 ggsave("6372_Project2_HOF/Homerun Outliers.png",plot = boxplotHRs, type = png(), height = 10)
@@ -155,18 +157,33 @@ ggsave("6372_Project2_HOF/Homerun Outliers.png",plot = boxplotHRs, type = png(),
 
 # Can we improve our model by including an interaction with positions?
 train.final.positions <- train.final
-train.final.positions$position.c <- train$position.c
-train.final.positions$position.1b <- train$position.1b
-train.final.positions$position.2b <- train$position.2b
-train.final.positions$position.3b <- train$position.3b
-train.final.positions$position.ss <- train$position.ss
-train.final.positions$position.lf <- train$position.lf
-train.final.positions$position.rf <- train$position.rf
-train.final.positions$position.cf <- train$position.cf
-
-train.final.positions$position.of <- ifelse(train$position.lf == 1 | train$position.cf == 1 | train$position.rf == 1, 1, 0)
-train.final.positions$position.if <- ifelse(train.final.positions$positions.of == 1, 0 , 1)
+train.final.positions$position <- train$position
+str(train.final.positions)
+# train.final.positions$position.c <- train$position.c
+# train.final.positions$position.1b <- train$position.1b
+# train.final.positions$position.2b <- train$position.2b
+# train.final.positions$position.3b <- train$position.3b
+# train.final.positions$position.ss <- train$position.ss
+# train.final.positions$position.lf <- train$position.lf
+# train.final.positions$position.rf <- train$position.rf
+# train.final.positions$position.cf <- train$position.cf
+# 
+# train.final.positions$position.of <- ifelse(train$position.lf == 1 | train$position.cf == 1 | train$position.rf == 1, 1, 0)
+# train.final.positions$position.if <- ifelse(train.final.positions$positions.of == 1, 0 , 1)
 names(train.final.positions)
+
+glm.positions <- glm(HallOfFame_inducted~
+                             Batting_R+
+                             Batting_3B+
+                             Batting_Average+
+                             AllstarGames+
+                             TotalAllStarAwards+
+                       position
+                            #  position:Batting_R+
+                            # position:Batting_3B+
+                            # position:Batting_Average
+                           ,data = train.final.positions, family = binomial)
+summary(glm.positions)
 
 glm.final.positions <- glm(HallOfFame_inducted~
                              Batting_R+
@@ -184,9 +201,13 @@ confusionMatrix(table(test$final.positions.predicted, test$HallOfFame_inducted))
 
 # No interaction terms helps by position.  Including Catcher alone improves the model
 View( glm.final.positions$coefficients )
-View( exp(cbind(coef(glm.final.positions), confint(glm.final.positions))) )
+View(exp(cbind(coef(glm.final.positions), confint(glm.final.positions))))
 
-#### FINAL MODEL ######
+odds.multiplier <- c(1, 300, 30, 0.05, 3, 3, 1)
+View(exp(coef(glm.final.positions) * odds.multiplier )
+
+
+)#### FINAL MODEL ######
 train.final$position.c <- train$position.c
 # Rerun
 glm.final <- glm(HallOfFame_inducted~.,data = train.final, family = binomial)
@@ -201,7 +222,6 @@ test$final.predicted <- ifelse(test$final.prob>.5,"Y","N")
 confusionMatrix(table(test$final.predicted, test$HallOfFame_inducted))
 roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$final.prob)
 auc(roccurve)
-
 
 # How did we originally do?
 train$final.prob <- predict.glm(glm.final,train[,-cols.Inducted],type="response")
@@ -282,12 +302,13 @@ ggplot(mydata, aes(logit, predictor.value))+
   facet_wrap(~predictors, scales = "free_y")
 
 train.transform <- train.final
+names(train.final)
 # train.transform$sqBattingAvg <- train.transform$Batting_Average^2
 # train.transform$eBattingAvg <- exp(train.transform$Batting_Average)
 # train.transform$lBattingAvg <- log(train.transform$Batting_Average)
 train.transform$lBatting_3B <- log(train.transform$Batting_3B + 1)
 # train.transform$sqRuns <- train.transform$Batting_R^2
-train.transform$lTotalAllstarAwards <- log(train.transform$TotalAllStarAwards + 1)
+train.transform$lTotalAllStarAwards <- log(train.transform$TotalAllStarAwards + 1)
 # train.transform$lAllstarGames <- log(trian.transform$AllstarGames + 1)
 # train.transform$sqAllstarGames <- train.transform$AllstarGames^2
 
@@ -296,11 +317,12 @@ glm.transform <- glm(HallOfFame_inducted~
                   Batting_R+
                   lBatting_3B+
                   AllstarGames+
-                    Batting_Average+
-                  lTotalAllstarAwards+
+                  Batting_Average+
+                  lTotalAllStarAwards+
                   position.c
              ,data = train.transform, family = binomial)
 summary(glm.transform)
+
 # Predict the probability (p) of diabete positivity
 probabilities <- predict(model, type = "response")
 predicted.classes <- ifelse(probabilities > 0.5, "Y", "N")
@@ -315,25 +337,31 @@ mydata <- mydata %>%
   mutate(logit = log(probabilities/(1-probabilities))) %>%
   gather(key = "predictors", value = "predictor.value", -logit)
 
-ggplot(mydata, aes(logit, predictor.value))+
+transformPlot <- ggplot(mydata, aes(logit, predictor.value))+
   geom_point(size = 0.5, alpha = 0.5) +
-  geom_smooth(method = "loess") + 
-  theme_bw() + 
+  geom_smooth(method = "loess") +
+  ggtitle("Figure 4 - Transformation Diagnostics") +
   facet_wrap(~predictors, scales = "free_y")
+transformPlot
+ggsave("6372_Project2_HOF/Transformation - Model 1.png",plot = transformPlot, type = png())
+
 
 test.transform <- test
 test.transform$sqBattingAvg <- test.transform$Batting_Average^2
 test.transform$eBattingAvg <- exp(test.transform$Batting_Average)
 test.transform$sqRuns <- test.transform$Batting_R^2
 test.transform$lBatting_3B <- log(test.transform$Batting_3B + 1)
-test.transform$lTotalAllstarAwards <- log(test.transform$TotalAllStarAwards + 1)
+test.transform$lTotalAllStarAwards <- log(test.transform$TotalAllStarAwards + 1)
 test.transform$lAllstarGames <- log(test.transform$AllstarGames + 1)
 test.transform$sqAllstarGames <- test.transform$AllstarGames^2
 
 # Test Model
-test.transform$final.transform.prob <- predict.glm(model,test.transform[,-cols.Inducted],type="response")
+test.transform$final.transform.prob <- predict.glm(glm.transform,test.transform[,-cols.Inducted],type="response")
 test.transform$final.transform.predicted <- ifelse(test.transform$final.transform.prob>.5,"Y","N")
 confusionMatrix(table(test.transform$final.transform.predicted, test.transform$HallOfFame_inducted))
+roccurve <- roc(response = test.transform$HallOfFame_inducted, predictor = test.transform$final.transform.prob)
+auc(roccurve)
+
 
 # influential values
 plot(glm.final.positions, which = 4, id.n = 3)
@@ -343,9 +371,12 @@ glm.final.positions.data <- augment(glm.final.positions) %>%
 
 glm.final.positions.data %>% top_n(3, .cooksd)
 
-ggplot(glm.final.positions.data, aes(index, .std.resid)) + 
-  geom_point(aes(color = HallOfFame_inducted), alpha = .5) +
-  theme_bw()
+residualsPlot <- ggplot(glm.final.positions.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = HallOfFame_inducted), alpha = .5) + 
+  theme(legend.position="none") +
+  ggtitle("Model 1 Residual Plot")
+residualsPlot
+ggsave("6372_Project2_HOF/Residuals - Model 1.png",plot = residualsPlot, type = png())
 
 
 # Eliminate Bias

@@ -80,8 +80,13 @@ sum(result$HallOfFame_inducted == "Y")
 
 names(result)
 
+result.recents <- Batters[Batters$Batting_total_seasons>=10 & Batters$finalYear > 2011 & Batters$finalYear < 2016,]
+dim(result.recents)
+sum(result.recents$HallOfFame_inducted == "Y")
+
 # Remove Apperances
 result <- result[,-c(49:65,116)]
+result.recents <- result.recents[,-c(49:65,116)]
 names(result)
 
 #Create a Training & Test Set
@@ -94,6 +99,7 @@ test<-result[-index,]
 write.csv(result, "6372_Project2_HOF/data/result.csv", row.names=FALSE)
 write.csv(train, "6372_Project2_HOF/data/train.csv", row.names=FALSE)
 write.csv(test, "6372_Project2_HOF/data/test.csv", row.names=FALSE)
+write.csv(result.recents, "6372_Project2_HOF/data/result.recents.csv", row.names=FALSE)
 
 
 dim(train)

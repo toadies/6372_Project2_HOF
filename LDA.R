@@ -27,6 +27,11 @@ text(x = .40, y = .6,paste("AUC = ", round(auc.train[[1]],3), sep = ""))
 test.prd<-predict(fit.lda, newdata = test.post.1961)$class
 confusionMatrix(table(test.prd,test.post.1961$HallOfFame_inducted))
 
+t <- table(predicted=test.prd,actual=test.post.1961$HallOfFame_inducted)
+fourfoldplot(t, color = c("#CC6666", "#99CC99"),
+             conf.level = 0, margin = 1, main = "Figure 6 - LDA Confusion Matrix")
+
+
 pred.lda <- predict(fit.lda, newdata = test.post.1961)
 preds <- pred.lda$posterior
 preds <- as.data.frame(preds)
@@ -34,7 +39,7 @@ pred <- prediction(preds[,2],test.lda.y)
 roc.perf = performance(pred, measure = "tpr", x.measure = "fpr")
 auc.test <- performance(pred, measure = "auc")
 auc.test <- auc.test@y.values
-plot(roc.perf)
+plot(roc.perf, main="Figure 7 - LDA ROC Curve")
 abline(a=0, b= 1)
 text(x = .40, y = .6,paste("AUC = ", round(auc.test[[1]],3), sep = ""))
 
@@ -44,8 +49,11 @@ fit.lda$means
 fit.lda$scaling
 fit.lda$svd^2/sum(fit.lda$svd^2)
 
+# Make a prediction on players retired from 2012 to 2015
+result.recents$pred<-predict(fit.lda, newdata = result.recents)$class
+table(result.recents$pred,result.recents$HallOfFame_inducted)
 
-
+t(result.recents[result.recents$pred=="Y",c(19,20,100,cols.Batting,89)])
 
 
 

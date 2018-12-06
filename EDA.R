@@ -13,12 +13,17 @@ library(tidyr)
 # What is our accuracy if we predicted nothing?
 
 prop.table( table( result$HallOfFame_inducted ) )
+prop.table( table( train$HallOfFame_inducted ) )
+prop.table( table( test$HallOfFame_inducted ) )
+
 
 result.summary <- aggregate(result[, c(cols.Batting, cols.Batting.avg)], list(result$HallOfFame_inducted), mean)
 result.summary <- rbind( result.summary, aggregate(result[, c(cols.Batting, cols.Batting.avg)], list(result$HallOfFame_inducted), sd))
-
-
 # write.csv(result.summary, "6372_Project2_HOF/battingsummary.csv", row.names=FALSE)
+
+result.summary <- aggregate(result[, c(cols.Fielding, cols.Awards)], list(result$HallOfFame_inducted), mean)
+result.summary <- rbind( result.summary, aggregate(result[, c(cols.Fielding, cols.Awards)], list(result$HallOfFame_inducted), sd))
+# write.csv(result.summary, "6372_Project2_HOF/fieldingAndAwards.csv", row.names=FALSE)
 
 # Batting Stats Compared to HOF
 pairs(result[,cols.Batting], col=result$HallOfFame_inducted)
@@ -47,10 +52,13 @@ cormat <- round(cor(batting.stats),2)
 melted_cormat <- melt(cormat)
 head(melted_cormat)
 melted_cormat <- melt(cormat)
-ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+battingHeatMap <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  xlab("") + ylab("") +
+  ggtitle("Figure 1 - Batting Correlation") +
+  # theme(plot.title = element_text(hjust = -1)) +
     geom_tile()
-
-ggsave("6372_Project2_HOF/batting heatmap.png",plot = last_plot(), type = png())
+battingHeatMap
+ggsave("6372_Project2_HOF/batting heatmap.png",plot = battingHeatMap, type = png(), width = 6.25, height = 6)
 
 batting.stats$Inducted <- result$HallOfFame_inducted
 #Matrix of hits, runs, rbi, walks, singles, doubles, and HR
@@ -61,8 +69,20 @@ ggpairsAlLBatting <- ggpairs(
     axisLabels="show")
 ggsave("6372_Project2_HOF/batting matrix.png",plot = ggpairsAlLBatting, type = png())
 
+batting.avg <- result[, c( 33, cols.Batting.avg) ]
+names(batting.avg) <- c("AB", "Avg", "SLG", "OBP", "Isolated", "wOBA")
+batting.avg$Inducted <- result$HallOfFame_inducted
+ggpairsBattingAvg <- ggpairs(
+  mapping = ggplot2::aes(color = Inducted),
+  batting.avg, 
+  diag=list(continuous="density", discrete="bar"), 
+  axisLabels="show")
+ggsave("6372_Project2_HOF/Batting Avg Matrix.png",plot = ggpairsBattingAvg, type = png())
+
+
+
 # Fielding EDA
-fielding.stats <- result[,cols.Fielding]
+fielding.stats <- result[,c(49,50,cols.Fielding)]
 # Remove Batting_
 names(fielding.stats) <- substr(names(fielding.stats), 10, nchar(names(fielding.stats)))
 names(fielding.stats)
@@ -78,6 +98,8 @@ ggsave("6372_Project2_HOF/fielding matrix.png",plot = ggpairsFielding, type = pn
 
 # Games Played vs. Hall
 boxplot( G ~ Inducted, data = fielding.stats)
+boxplot( A ~ Inducted, data = fielding.stats)
+
 library(dplyr)
 
 names(mtcars)
@@ -434,7 +456,7 @@ arrangePCAAnalysis <- ggarrange(
     nrow = 2
 )
 arrangePCAAnalysis <- annotate_figure( arrangePCAAnalysis, 
-                                       top = text_grob("All Players")
+                                       top = text_grob("Figure 5 - All Players")
 )
 arrangePCAAnalysis
 ggsave("6372_Project2_HOF/PCA Analysis all players.png",plot = arrangePCAAnalysis, type = png())
@@ -490,7 +512,7 @@ arrangePCAAnalysis <- ggarrange(
   nrow = 2
 )
 arrangePCAAnalysis <- annotate_figure( arrangePCAAnalysis, 
-  top = text_grob("Players started after 1961")
+  top = text_grob("Figure 5 - Players started after 1961")
 )
 arrangePCAAnalysis
 ggsave("6372_Project2_HOF/PCA Analysis post 1961.png",plot = arrangePCAAnalysis, type = png())
@@ -540,7 +562,7 @@ result$Inducted <- result$HallOfFame_inducted
 sumstats<-aggregate(Batting_R~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
 meansPlotRuns <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("Runs Award")+
+  ylab("Total Runs")+
   geom_line()+
   geom_point()+
   geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
@@ -551,7 +573,7 @@ meansPlotRuns
 sumstats<-aggregate(Batting_3B~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
 meansPlotTriples <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("Triples")+
+  ylab("Total Triples")+
   geom_line()+
   geom_point()+
   geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
@@ -573,7 +595,7 @@ meansPlotBattingAvg
 sumstats<-aggregate(AllstarGames~Inducted*position,data=result,mysummary)
 sumstats<-cbind(sumstats[,1:2],sumstats[,-(1:2)])
 meansPlotAllstarGames <- ggplot(sumstats,aes(x=position,y=Mean,group=Inducted,colour=Inducted))+
-  ylab("Allstar Apperances")+
+  ylab("Allstar Appearances")+
   geom_line()+
   geom_point()+
   geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),width=.1) + 
@@ -598,7 +620,8 @@ arrangeBattingAvgStats <- ggarrange(
   ncol = 3,
   nrow = 1
 )
+arrangeBattingAvgStats <- annotate_figure( arrangeBattingAvgStats, 
+                                       top = text_grob("Figure 3 - Position Interactions")
+)
 arrangeBattingAvgStats
 ggsave("6372_Project2_HOF/Final Model Means Plot.png",plot = arrangeBattingAvgStats, type = png(), width = 6, height = 2)
-
- 

@@ -138,17 +138,22 @@ summary(glm.post.1961.final)
 test.post.1961$final.prob <- predict.glm(glm.post.1961.final,test.post.1961[,-cols.Inducted],type="response")
 test.post.1961$final.predicted <- ifelse(test.post.1961$final.prob>.5,"Y","N")
 confusionMatrix(table(test.post.1961$final.predicted, test.post.1961$HallOfFame_inducted))
+roccurve <- roc(response = test.post.1961$HallOfFame_inducted, predictor = test.post.1961$final.prob)
+auc(roccurve)
 
 train.post.1961$final.prob <- predict.glm(glm.post.1961.final,train.post.1961[,-cols.Inducted],type="response")
 train.post.1961$final.predicted <- ifelse(train.post.1961$final.prob>.5,"Y","N")
 confusionMatrix(table(train.post.1961$final.predicted, train.post.1961$HallOfFame_inducted))
-
+roccurve <- roc(response = train.post.1961$HallOfFame_inducted, predictor = train.post.1961$final.prob)
+auc(roccurve)
 
 # No interaction terms helps by position.  Including Catcher alone improves the model
 glm.post.1961.final$coefficients
-exp(cbind(coef(glm.post.1961.final), confint(glm.post.1961.final)))
+View(exp(cbind(coef(glm.post.1961.final), confint(glm.post.1961.final))))
 
-
+odds.multiplier <- c(1, 300, 30, 3)
+View(exp(coef(glm.post.1961.final) * odds.multiplier ) )
+     
 car::vif(glm.post.1961.final)
 round( 1 - ( glm.post.1961.final$deviance / glm.post.1961.final$null.deviance ), 2 )
 
@@ -156,6 +161,21 @@ ggplot( test.post.1961, aes( final.prob, color = HallOfFame_inducted ) ) +
   geom_density( size = 1 ) +
   ggtitle( "Training Set's Predicted Score" ) + 
   theme(legend.position="none")
+
+plot(glm.post.1961.final, which = 4, id.n = 3)
+glm.post.1961.final.positions.data <- augment(glm.post.1961.final) %>% 
+  mutate(index = 1:n()) 
+
+glm.post.1961.final.positions.data %>% top_n(3, .cooksd)
+
+residualsPlot <- ggplot(glm.post.1961.final.positions.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = HallOfFame_inducted), alpha = .5) + 
+  theme(legend.position="none") +
+  ggtitle("Model 2 Residual Plot")
+residualsPlot
+ggsave("6372_Project2_HOF/Residuals - Model 2.png",plot = residualsPlot, type = png())
+
+
 
 source("6372_Project2_HOF/unbalanced_functions.r")
 
@@ -169,4 +189,8 @@ accuracy_info <- AccuracyCutoffInfo(
   test.post.1961$HallOfFame_inducted
 )
 # define the theme for the next plot
+
 accuracy_info$plot
+
+
+car::vif(glm.final)

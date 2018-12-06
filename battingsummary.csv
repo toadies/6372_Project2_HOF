@@ -1,6 +1,6 @@
-,Hall Of Fame,Games Played,At Bats,Runs,Hits,Doubles,Triples,Home Runs,RBIs,Stolen Bases,Caught Stealing,Walks,Strike Out,Intentional Walks,Hit By Pitch,Sacrifice Hits (bunts),Sacrifice Flies,Ground in Double Play,Singles,Batting Average,Slugging %,On Base %,Isolated Power,Weighted On-base Avg
-Means,N,1259.7,4197.1,571.4,1131.7,191.7,38.8,87.8,520.3,90.7,31.9,405.2,503.0,25.0,29.8,51.7,22.8,70.2,813.4,0.265,0.386,0.330,0.121,0.177
-,Y,2132.8,7908.2,1320.6,2390.2,410.6,106.2,216.6,1212.5,227.6,52.5,895.8,709.1,49.1,55.1,100.2,30.6,103.5,1656.8,0.302,0.462,0.375,0.160,0.216
-Standard Deviations,N,470.4,1885.7,312.7,552.0,103.3,30.7,91.3,302.7,107.6,33.3,258.3,356.6,36.4,28.5,55.8,24.3,60.3,393.2,0.022,0.056,0.030,0.046,0.039
-,Y,521.9,1956.5,373.7,616.3,127.3,57.5,178.6,400.3,225.3,55.2,393.6,530.6,74.3,44.0,92.4,42.3,103.7,459.6,0.026,0.067,0.034,0.059,0.046
-,,G,AB,R,H,2B,3B,HR,RBI,SB,CS,BB,SO,IBB,HBP,SH,SF,GIDP,1B,AVG,SLG,OPS,ISO,wOBA
+,Hall Of Fame,Games Played,At Bats,Runs,Hits,Singles,Doubles,Triples,Home Runs,RBIs,Stolen Bases,Caught Stealing,Walks,Strike Out,Intentional Walks,Hit By Pitch,Sacrifice Hits (bunts),Sacrifice Flies,Ground in Double Play,Batting Average,Slugging %,On Base %,Isolated Power,Weighted On-base Avg,,
+Means,N," 1,259.72 "," 4,197.13 ", 571.41 ," 1,131.75 ", 813.44 , 191.68 , 38.82 , 87.80 , 520.26 , 90.69 , 31.88 , 405.21 , 503.05 , 25.02 , 29.77 , 51.75 , 22.83 , 70.16 ,0.265,0.386,0.330,0.121,0.177,,
+,Y," 2,132.83 "," 7,908.23 "," 1,320.58 "," 2,390.17 "," 1,656.77 ", 410.60 , 106.23 , 216.57 ," 1,212.53 ", 227.63 , 52.46 , 895.80 , 709.09 , 49.08 , 55.13 , 100.17 , 30.61 , 103.52 ,0.302,0.462,0.375,0.160,0.216,,
+Standard Deviations,N, 470.38 ," 1,885.74 ", 312.73 , 552.04 , 393.15 , 103.26 , 30.70 , 91.32 , 302.67 , 107.60 , 33.29 , 258.32 , 356.60 , 36.41 , 28.47 , 55.79 , 24.25 , 60.25 ,0.022,0.056,0.030,0.046,0.039,,
+,Y, 521.95 ," 1,956.52 ", 373.68 , 616.25 , 459.56 , 127.29 , 57.51 , 178.55 , 400.30 , 225.30 , 55.24 , 393.63 , 530.62 , 74.27 , 43.97 , 92.45 , 42.31 , 103.65 ,0.026,0.067,0.034,0.059,0.046,,
+,,G,AB,R,H,1B,2B,3B,HR,RBI,SB,CS,BB,SO,IBB,HBP,SH,SF,GIDP,AVG,SLG,OPS,ISO,wOBA,,
