@@ -1,7 +1,5 @@
 # Read the Data
-
 Batters <- read.csv("6372_Project2_HOF/data/Batters.csv", na.strings = "NULL")
-
 
 # Identify position most appeared
 Batters$position <- colnames(Batters[,53:61])[max.col(Batters[,53:61],ties.method="first")]

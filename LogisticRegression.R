@@ -24,15 +24,12 @@ confusionMatrix(table(train$simple.pred, train$HallOfFame_inducted))
 roccurve <- roc(response = train$HallOfFame_inducted, predictor = train$simple.prob)
 auc(roccurve)
 
-
 # Test Model
 test$simple.prob <- predict.glm(glm.simple,test[,-cols.Inducted],type="response")
 test$simple.predicted <- ifelse(test$simple.prob>.5,"Y","N")
 confusionMatrix(table(test$simple.pred, test$HallOfFame_inducted))
 roccurve <- roc(response = test$HallOfFame_inducted, predictor = test$simple.prob)
 auc(roccurve)
-
-
 
 # Let's get our data for the LASSO
 train.full <- train[,c(cols.Inducted, cols.Batting, cols.Batting.avg, cols.Awards)]
@@ -129,6 +126,12 @@ names(train.final.excl.3b)
 glm.excl.3b <- glm(HallOfFame_inducted~.,data = train.final.excl.3b, family = binomial)
 summary(glm.excl.3b)
 
+odds.multiplier <- c(1, 300, 0.05, 3, 3, 200)
+View(exp(coef(glm.excl.3b) * odds.multiplier ) )
+
+final.coef <- as.data.frame(cbind(glm.excl.3b$coefficients, confint(glm.excl.3b)) )
+View(exp(final.coef * odds.multiplier))
+
 ### Test Model
 test$excl.3b.prob <- predict.glm(glm.excl.3b,test[,-cols.Inducted],type="response")
 test$excl.3b.predicted <- ifelse(test$excl.3b.prob>.5,"Y","N")
@@ -159,7 +162,7 @@ ggsave("6372_Project2_HOF/Homerun Outliers.png",plot = boxplotHRs, type = png(),
 train.final.positions <- train.final
 train.final.positions$position <- train$position
 str(train.final.positions)
-# train.final.positions$position.c <- train$position.c
+train.final.positions$position.c <- train$position.c
 # train.final.positions$position.1b <- train$position.1b
 # train.final.positions$position.2b <- train$position.2b
 # train.final.positions$position.3b <- train$position.3b
@@ -204,8 +207,10 @@ View( glm.final.positions$coefficients )
 View(exp(cbind(coef(glm.final.positions), confint(glm.final.positions))))
 
 odds.multiplier <- c(1, 300, 30, 0.05, 3, 3, 1)
-View(exp(coef(glm.final.positions) * odds.multiplier )
+View(exp(coef(glm.final.positions) * odds.multiplier ) )
 
+final.coef <- as.data.frame(cbind(glm.final.positions$coefficients, confint(glm.final.positions)) )
+View(exp(final.coef * odds.multiplier))
 
 )#### FINAL MODEL ######
 train.final$position.c <- train$position.c
@@ -345,7 +350,6 @@ transformPlot <- ggplot(mydata, aes(logit, predictor.value))+
 transformPlot
 ggsave("6372_Project2_HOF/Transformation - Model 1.png",plot = transformPlot, type = png())
 
-
 test.transform <- test
 test.transform$sqBattingAvg <- test.transform$Batting_Average^2
 test.transform$eBattingAvg <- exp(test.transform$Batting_Average)
@@ -362,7 +366,6 @@ confusionMatrix(table(test.transform$final.transform.predicted, test.transform$H
 roccurve <- roc(response = test.transform$HallOfFame_inducted, predictor = test.transform$final.transform.prob)
 auc(roccurve)
 
-
 # influential values
 plot(glm.final.positions, which = 4, id.n = 3)
 train[c(99,124,261),c(6,19,20,26,27,100,37,39,89,121,91)]
@@ -377,7 +380,6 @@ residualsPlot <- ggplot(glm.final.positions.data, aes(index, .std.resid)) +
   ggtitle("Model 1 Residual Plot")
 residualsPlot
 ggsave("6372_Project2_HOF/Residuals - Model 1.png",plot = residualsPlot, type = png())
-
 
 # Eliminate Bias
 # Let's get our data for the LASSO
@@ -425,7 +427,6 @@ auc(roccurve)
 ggplot(test.post.1961, aes(as.numeric(row.names(test.post.1961)), final.stats.prob)) + 
   geom_point(aes(color = HallOfFame_inducted), alpha = .5) +
   theme_bw()
-
 
 source("6372_Project2_HOF/unbalanced_functions.r")
 
